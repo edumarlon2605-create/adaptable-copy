@@ -1,0 +1,22 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
+import { ClienteGuard } from "@/lib/cliente-guard";
+
+export const Route = createFileRoute("/favoritos")({
+  head: () => ({
+    meta: [{ title: "Favoritos — BBC Consórcios" }, { name: "robots", content: "noindex" }],
+  }),
+  component: () => (
+    <ClienteGuard>
+      <div className="min-h-screen flex flex-col bg-background">
+        <SiteHeader />
+        <main className="mx-auto max-w-3xl w-full flex-1 px-4 py-16">
+          <h1 className="font-display text-3xl font-bold">Favoritos</h1>
+          <p className="text-muted-foreground mt-2">Nenhum item favoritado ainda.</p>
+        </main>
+        <SiteFooter />
+      </div>
+    </ClienteGuard>
+  ),
+});

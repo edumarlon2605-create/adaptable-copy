@@ -10,33 +10,363 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as BemVindoRouteImport } from './routes/bem-vindo'
+import { Route as DepoimentosRouteImport } from './routes/depoimentos'
+import { Route as FavoritosRouteImport } from './routes/favoritos'
+import { Route as LgpdRouteImport } from './routes/lgpd'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as LoginAdminRouteImport } from './routes/login-admin'
+import { Route as MeusPedidosRouteImport } from './routes/meus-pedidos'
+import { Route as MinhaContaRouteImport } from './routes/minha-conta'
+import { Route as TrabalheConoscoRouteImport } from './routes/trabalhe-conosco'
+import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
+import { Route as AuthenticatedClienteRouteRouteImport } from './routes/_authenticated/cliente/route'
+import { Route as ConsorcioComoFuncionaRouteImport } from './routes/consorcio.como-funciona'
+import { Route as ConsorcioOQueERouteImport } from './routes/consorcio.o-que-e'
+import { Route as ConsorcioVantagensRouteImport } from './routes/consorcio.vantagens'
+import { Route as SimuladorCategoriaRouteImport } from './routes/simulador.$categoria'
+import { Route as SobreHistoriaRouteImport } from './routes/sobre.historia'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as AuthenticatedAdminCartasRouteImport } from './routes/_authenticated/admin/cartas'
+import { Route as AuthenticatedAdminClientesRouteImport } from './routes/_authenticated/admin/clientes'
+import { Route as AuthenticatedAdminConfiguracoesRouteImport } from './routes/_authenticated/admin/configuracoes'
+import { Route as AuthenticatedAdminLeadsRouteImport } from './routes/_authenticated/admin/leads'
+import { Route as AuthenticatedAdminUsuariosRouteImport } from './routes/_authenticated/admin/usuarios'
+import { Route as AuthenticatedClienteIndexRouteImport } from './routes/_authenticated/cliente/index'
+import { Route as AuthenticatedClientePerfilRouteImport } from './routes/_authenticated/cliente/perfil'
+import { Route as AuthenticatedClienteSenhaRouteImport } from './routes/_authenticated/cliente/senha'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BemVindoRoute = BemVindoRouteImport.update({
+  id: '/bem-vindo',
+  path: '/bem-vindo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DepoimentosRoute = DepoimentosRouteImport.update({
+  id: '/depoimentos',
+  path: '/depoimentos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FavoritosRoute = FavoritosRouteImport.update({
+  id: '/favoritos',
+  path: '/favoritos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LgpdRoute = LgpdRouteImport.update({
+  id: '/lgpd',
+  path: '/lgpd',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginAdminRoute = LoginAdminRouteImport.update({
+  id: '/login-admin',
+  path: '/login-admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeusPedidosRoute = MeusPedidosRouteImport.update({
+  id: '/meus-pedidos',
+  path: '/meus-pedidos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MinhaContaRoute = MinhaContaRouteImport.update({
+  id: '/minha-conta',
+  path: '/minha-conta',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrabalheConoscoRoute = TrabalheConoscoRouteImport.update({
+  id: '/trabalhe-conosco',
+  path: '/trabalhe-conosco',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedClienteRouteRoute =
+  AuthenticatedClienteRouteRouteImport.update({
+    id: '/cliente',
+    path: '/cliente',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const ConsorcioComoFuncionaRoute = ConsorcioComoFuncionaRouteImport.update({
+  id: '/consorcio/como-funciona',
+  path: '/consorcio/como-funciona',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConsorcioOQueERoute = ConsorcioOQueERouteImport.update({
+  id: '/consorcio/o-que-e',
+  path: '/consorcio/o-que-e',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConsorcioVantagensRoute = ConsorcioVantagensRouteImport.update({
+  id: '/consorcio/vantagens',
+  path: '/consorcio/vantagens',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SimuladorCategoriaRoute = SimuladorCategoriaRouteImport.update({
+  id: '/simulador/$categoria',
+  path: '/simulador/$categoria',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SobreHistoriaRoute = SobreHistoriaRouteImport.update({
+  id: '/sobre/historia',
+  path: '/sobre/historia',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
+} as any)
+const AuthenticatedAdminCartasRoute =
+  AuthenticatedAdminCartasRouteImport.update({
+    id: '/cartas',
+    path: '/cartas',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminClientesRoute =
+  AuthenticatedAdminClientesRouteImport.update({
+    id: '/clientes',
+    path: '/clientes',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminConfiguracoesRoute =
+  AuthenticatedAdminConfiguracoesRouteImport.update({
+    id: '/configuracoes',
+    path: '/configuracoes',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminLeadsRoute = AuthenticatedAdminLeadsRouteImport.update({
+  id: '/leads',
+  path: '/leads',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
+} as any)
+const AuthenticatedAdminUsuariosRoute =
+  AuthenticatedAdminUsuariosRouteImport.update({
+    id: '/usuarios',
+    path: '/usuarios',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedClienteIndexRoute =
+  AuthenticatedClienteIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedClienteRouteRoute,
+  } as any)
+const AuthenticatedClientePerfilRoute =
+  AuthenticatedClientePerfilRouteImport.update({
+    id: '/perfil',
+    path: '/perfil',
+    getParentRoute: () => AuthenticatedClienteRouteRoute,
+  } as any)
+const AuthenticatedClienteSenhaRoute =
+  AuthenticatedClienteSenhaRouteImport.update({
+    id: '/senha',
+    path: '/senha',
+    getParentRoute: () => AuthenticatedClienteRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/bem-vindo': typeof BemVindoRoute
+  '/depoimentos': typeof DepoimentosRoute
+  '/favoritos': typeof FavoritosRoute
+  '/lgpd': typeof LgpdRoute
+  '/login': typeof LoginRoute
+  '/login-admin': typeof LoginAdminRoute
+  '/meus-pedidos': typeof MeusPedidosRoute
+  '/minha-conta': typeof MinhaContaRoute
+  '/trabalhe-conosco': typeof TrabalheConoscoRoute
+  '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
+  '/cliente': typeof AuthenticatedClienteRouteRouteWithChildren
+  '/consorcio/como-funciona': typeof ConsorcioComoFuncionaRoute
+  '/consorcio/o-que-e': typeof ConsorcioOQueERoute
+  '/consorcio/vantagens': typeof ConsorcioVantagensRoute
+  '/simulador/$categoria': typeof SimuladorCategoriaRoute
+  '/sobre/historia': typeof SobreHistoriaRoute
+  '/admin/cartas': typeof AuthenticatedAdminCartasRoute
+  '/admin/clientes': typeof AuthenticatedAdminClientesRoute
+  '/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
+  '/admin/leads': typeof AuthenticatedAdminLeadsRoute
+  '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
+  '/cliente/perfil': typeof AuthenticatedClientePerfilRoute
+  '/cliente/senha': typeof AuthenticatedClienteSenhaRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/cliente/': typeof AuthenticatedClienteIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/bem-vindo': typeof BemVindoRoute
+  '/depoimentos': typeof DepoimentosRoute
+  '/favoritos': typeof FavoritosRoute
+  '/lgpd': typeof LgpdRoute
+  '/login': typeof LoginRoute
+  '/login-admin': typeof LoginAdminRoute
+  '/meus-pedidos': typeof MeusPedidosRoute
+  '/minha-conta': typeof MinhaContaRoute
+  '/trabalhe-conosco': typeof TrabalheConoscoRoute
+  '/consorcio/como-funciona': typeof ConsorcioComoFuncionaRoute
+  '/consorcio/o-que-e': typeof ConsorcioOQueERoute
+  '/consorcio/vantagens': typeof ConsorcioVantagensRoute
+  '/simulador/$categoria': typeof SimuladorCategoriaRoute
+  '/sobre/historia': typeof SobreHistoriaRoute
+  '/admin/cartas': typeof AuthenticatedAdminCartasRoute
+  '/admin/clientes': typeof AuthenticatedAdminClientesRoute
+  '/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
+  '/admin/leads': typeof AuthenticatedAdminLeadsRoute
+  '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
+  '/cliente/perfil': typeof AuthenticatedClientePerfilRoute
+  '/cliente/senha': typeof AuthenticatedClienteSenhaRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
+  '/cliente': typeof AuthenticatedClienteIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/bem-vindo': typeof BemVindoRoute
+  '/depoimentos': typeof DepoimentosRoute
+  '/favoritos': typeof FavoritosRoute
+  '/lgpd': typeof LgpdRoute
+  '/login': typeof LoginRoute
+  '/login-admin': typeof LoginAdminRoute
+  '/meus-pedidos': typeof MeusPedidosRoute
+  '/minha-conta': typeof MinhaContaRoute
+  '/trabalhe-conosco': typeof TrabalheConoscoRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
+  '/_authenticated/cliente': typeof AuthenticatedClienteRouteRouteWithChildren
+  '/consorcio/como-funciona': typeof ConsorcioComoFuncionaRoute
+  '/consorcio/o-que-e': typeof ConsorcioOQueERoute
+  '/consorcio/vantagens': typeof ConsorcioVantagensRoute
+  '/simulador/$categoria': typeof SimuladorCategoriaRoute
+  '/sobre/historia': typeof SobreHistoriaRoute
+  '/_authenticated/admin/cartas': typeof AuthenticatedAdminCartasRoute
+  '/_authenticated/admin/clientes': typeof AuthenticatedAdminClientesRoute
+  '/_authenticated/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
+  '/_authenticated/admin/leads': typeof AuthenticatedAdminLeadsRoute
+  '/_authenticated/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
+  '/_authenticated/cliente/perfil': typeof AuthenticatedClientePerfilRoute
+  '/_authenticated/cliente/senha': typeof AuthenticatedClienteSenhaRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/cliente/': typeof AuthenticatedClienteIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/bem-vindo'
+    | '/depoimentos'
+    | '/favoritos'
+    | '/lgpd'
+    | '/login'
+    | '/login-admin'
+    | '/meus-pedidos'
+    | '/minha-conta'
+    | '/trabalhe-conosco'
+    | '/admin'
+    | '/cliente'
+    | '/consorcio/como-funciona'
+    | '/consorcio/o-que-e'
+    | '/consorcio/vantagens'
+    | '/simulador/$categoria'
+    | '/sobre/historia'
+    | '/admin/cartas'
+    | '/admin/clientes'
+    | '/admin/configuracoes'
+    | '/admin/leads'
+    | '/admin/usuarios'
+    | '/cliente/perfil'
+    | '/cliente/senha'
+    | '/admin/'
+    | '/cliente/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/bem-vindo'
+    | '/depoimentos'
+    | '/favoritos'
+    | '/lgpd'
+    | '/login'
+    | '/login-admin'
+    | '/meus-pedidos'
+    | '/minha-conta'
+    | '/trabalhe-conosco'
+    | '/consorcio/como-funciona'
+    | '/consorcio/o-que-e'
+    | '/consorcio/vantagens'
+    | '/simulador/$categoria'
+    | '/sobre/historia'
+    | '/admin/cartas'
+    | '/admin/clientes'
+    | '/admin/configuracoes'
+    | '/admin/leads'
+    | '/admin/usuarios'
+    | '/cliente/perfil'
+    | '/cliente/senha'
+    | '/admin'
+    | '/cliente'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/bem-vindo'
+    | '/depoimentos'
+    | '/favoritos'
+    | '/lgpd'
+    | '/login'
+    | '/login-admin'
+    | '/meus-pedidos'
+    | '/minha-conta'
+    | '/trabalhe-conosco'
+    | '/_authenticated/admin'
+    | '/_authenticated/cliente'
+    | '/consorcio/como-funciona'
+    | '/consorcio/o-que-e'
+    | '/consorcio/vantagens'
+    | '/simulador/$categoria'
+    | '/sobre/historia'
+    | '/_authenticated/admin/cartas'
+    | '/_authenticated/admin/clientes'
+    | '/_authenticated/admin/configuracoes'
+    | '/_authenticated/admin/leads'
+    | '/_authenticated/admin/usuarios'
+    | '/_authenticated/cliente/perfil'
+    | '/_authenticated/cliente/senha'
+    | '/_authenticated/admin/'
+    | '/_authenticated/cliente/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  BemVindoRoute: typeof BemVindoRoute
+  DepoimentosRoute: typeof DepoimentosRoute
+  FavoritosRoute: typeof FavoritosRoute
+  LgpdRoute: typeof LgpdRoute
+  LoginRoute: typeof LoginRoute
+  LoginAdminRoute: typeof LoginAdminRoute
+  MeusPedidosRoute: typeof MeusPedidosRoute
+  MinhaContaRoute: typeof MinhaContaRoute
+  TrabalheConoscoRoute: typeof TrabalheConoscoRoute
+  ConsorcioComoFuncionaRoute: typeof ConsorcioComoFuncionaRoute
+  ConsorcioOQueERoute: typeof ConsorcioOQueERoute
+  ConsorcioVantagensRoute: typeof ConsorcioVantagensRoute
+  SimuladorCategoriaRoute: typeof SimuladorCategoriaRoute
+  SobreHistoriaRoute: typeof SobreHistoriaRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +378,263 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bem-vindo': {
+      id: '/bem-vindo'
+      path: '/bem-vindo'
+      fullPath: '/bem-vindo'
+      preLoaderRoute: typeof BemVindoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/depoimentos': {
+      id: '/depoimentos'
+      path: '/depoimentos'
+      fullPath: '/depoimentos'
+      preLoaderRoute: typeof DepoimentosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/favoritos': {
+      id: '/favoritos'
+      path: '/favoritos'
+      fullPath: '/favoritos'
+      preLoaderRoute: typeof FavoritosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lgpd': {
+      id: '/lgpd'
+      path: '/lgpd'
+      fullPath: '/lgpd'
+      preLoaderRoute: typeof LgpdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login-admin': {
+      id: '/login-admin'
+      path: '/login-admin'
+      fullPath: '/login-admin'
+      preLoaderRoute: typeof LoginAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/meus-pedidos': {
+      id: '/meus-pedidos'
+      path: '/meus-pedidos'
+      fullPath: '/meus-pedidos'
+      preLoaderRoute: typeof MeusPedidosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/minha-conta': {
+      id: '/minha-conta'
+      path: '/minha-conta'
+      fullPath: '/minha-conta'
+      preLoaderRoute: typeof MinhaContaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trabalhe-conosco': {
+      id: '/trabalhe-conosco'
+      path: '/trabalhe-conosco'
+      fullPath: '/trabalhe-conosco'
+      preLoaderRoute: typeof TrabalheConoscoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cliente': {
+      id: '/_authenticated/cliente'
+      path: '/cliente'
+      fullPath: '/cliente'
+      preLoaderRoute: typeof AuthenticatedClienteRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/consorcio/como-funciona': {
+      id: '/consorcio/como-funciona'
+      path: '/consorcio/como-funciona'
+      fullPath: '/consorcio/como-funciona'
+      preLoaderRoute: typeof ConsorcioComoFuncionaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/consorcio/o-que-e': {
+      id: '/consorcio/o-que-e'
+      path: '/consorcio/o-que-e'
+      fullPath: '/consorcio/o-que-e'
+      preLoaderRoute: typeof ConsorcioOQueERouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/consorcio/vantagens': {
+      id: '/consorcio/vantagens'
+      path: '/consorcio/vantagens'
+      fullPath: '/consorcio/vantagens'
+      preLoaderRoute: typeof ConsorcioVantagensRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/simulador/$categoria': {
+      id: '/simulador/$categoria'
+      path: '/simulador/$categoria'
+      fullPath: '/simulador/$categoria'
+      preLoaderRoute: typeof SimuladorCategoriaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sobre/historia': {
+      id: '/sobre/historia'
+      path: '/sobre/historia'
+      fullPath: '/sobre/historia'
+      preLoaderRoute: typeof SobreHistoriaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/cartas': {
+      id: '/_authenticated/admin/cartas'
+      path: '/cartas'
+      fullPath: '/admin/cartas'
+      preLoaderRoute: typeof AuthenticatedAdminCartasRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/clientes': {
+      id: '/_authenticated/admin/clientes'
+      path: '/clientes'
+      fullPath: '/admin/clientes'
+      preLoaderRoute: typeof AuthenticatedAdminClientesRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/configuracoes': {
+      id: '/_authenticated/admin/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/admin/configuracoes'
+      preLoaderRoute: typeof AuthenticatedAdminConfiguracoesRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/leads': {
+      id: '/_authenticated/admin/leads'
+      path: '/leads'
+      fullPath: '/admin/leads'
+      preLoaderRoute: typeof AuthenticatedAdminLeadsRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/usuarios': {
+      id: '/_authenticated/admin/usuarios'
+      path: '/usuarios'
+      fullPath: '/admin/usuarios'
+      preLoaderRoute: typeof AuthenticatedAdminUsuariosRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/cliente/': {
+      id: '/_authenticated/cliente/'
+      path: '/'
+      fullPath: '/cliente/'
+      preLoaderRoute: typeof AuthenticatedClienteIndexRouteImport
+      parentRoute: typeof AuthenticatedClienteRouteRoute
+    }
+    '/_authenticated/cliente/perfil': {
+      id: '/_authenticated/cliente/perfil'
+      path: '/perfil'
+      fullPath: '/cliente/perfil'
+      preLoaderRoute: typeof AuthenticatedClientePerfilRouteImport
+      parentRoute: typeof AuthenticatedClienteRouteRoute
+    }
+    '/_authenticated/cliente/senha': {
+      id: '/_authenticated/cliente/senha'
+      path: '/senha'
+      fullPath: '/cliente/senha'
+      preLoaderRoute: typeof AuthenticatedClienteSenhaRouteImport
+      parentRoute: typeof AuthenticatedClienteRouteRoute
+    }
   }
 }
 
+interface AuthenticatedAdminRouteRouteChildren {
+  AuthenticatedAdminCartasRoute: typeof AuthenticatedAdminCartasRoute
+  AuthenticatedAdminClientesRoute: typeof AuthenticatedAdminClientesRoute
+  AuthenticatedAdminConfiguracoesRoute: typeof AuthenticatedAdminConfiguracoesRoute
+  AuthenticatedAdminLeadsRoute: typeof AuthenticatedAdminLeadsRoute
+  AuthenticatedAdminUsuariosRoute: typeof AuthenticatedAdminUsuariosRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+}
+
+const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
+  {
+    AuthenticatedAdminCartasRoute: AuthenticatedAdminCartasRoute,
+    AuthenticatedAdminClientesRoute: AuthenticatedAdminClientesRoute,
+    AuthenticatedAdminConfiguracoesRoute: AuthenticatedAdminConfiguracoesRoute,
+    AuthenticatedAdminLeadsRoute: AuthenticatedAdminLeadsRoute,
+    AuthenticatedAdminUsuariosRoute: AuthenticatedAdminUsuariosRoute,
+    AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  }
+
+const AuthenticatedAdminRouteRouteWithChildren =
+  AuthenticatedAdminRouteRoute._addFileChildren(
+    AuthenticatedAdminRouteRouteChildren,
+  )
+
+interface AuthenticatedClienteRouteRouteChildren {
+  AuthenticatedClientePerfilRoute: typeof AuthenticatedClientePerfilRoute
+  AuthenticatedClienteSenhaRoute: typeof AuthenticatedClienteSenhaRoute
+  AuthenticatedClienteIndexRoute: typeof AuthenticatedClienteIndexRoute
+}
+
+const AuthenticatedClienteRouteRouteChildren: AuthenticatedClienteRouteRouteChildren =
+  {
+    AuthenticatedClientePerfilRoute: AuthenticatedClientePerfilRoute,
+    AuthenticatedClienteSenhaRoute: AuthenticatedClienteSenhaRoute,
+    AuthenticatedClienteIndexRoute: AuthenticatedClienteIndexRoute,
+  }
+
+const AuthenticatedClienteRouteRouteWithChildren =
+  AuthenticatedClienteRouteRoute._addFileChildren(
+    AuthenticatedClienteRouteRouteChildren,
+  )
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
+  AuthenticatedClienteRouteRoute: typeof AuthenticatedClienteRouteRouteWithChildren
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
+  AuthenticatedClienteRouteRoute: AuthenticatedClienteRouteRouteWithChildren,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  BemVindoRoute: BemVindoRoute,
+  DepoimentosRoute: DepoimentosRoute,
+  FavoritosRoute: FavoritosRoute,
+  LgpdRoute: LgpdRoute,
+  LoginRoute: LoginRoute,
+  LoginAdminRoute: LoginAdminRoute,
+  MeusPedidosRoute: MeusPedidosRoute,
+  MinhaContaRoute: MinhaContaRoute,
+  TrabalheConoscoRoute: TrabalheConoscoRoute,
+  ConsorcioComoFuncionaRoute: ConsorcioComoFuncionaRoute,
+  ConsorcioOQueERoute: ConsorcioOQueERoute,
+  ConsorcioVantagensRoute: ConsorcioVantagensRoute,
+  SimuladorCategoriaRoute: SimuladorCategoriaRoute,
+  SobreHistoriaRoute: SobreHistoriaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
