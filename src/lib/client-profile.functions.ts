@@ -1,26 +1,29 @@
 import { clienteSupabase } from "@/lib/dual-supabase";
 
-type Payload<T = any> = { data?: T } | undefined;
-
 async function call<TOut = any>(action: string, data?: any): Promise<TOut> {
-  const { data: res, error } = await clienteSupabase.functions.invoke("bbc-api", {
-    body: { action, data: data ?? {} },
-  });
-  if (error) {
-    let msg = error.message || "Falha na chamada.";
-    try {
-      const ctx = (error as any).context;
-      if (ctx && typeof ctx.json === "function") {
-        const j = await ctx.json();
-        if (j?.error) msg = j.error;
-      }
-    } catch { /* ignore */ }
-    throw new Error(msg);
+  const { data: sess } = await clienteSupabase.auth.getSession();
+  const token = sess?.session?.access_token;
+  let res: Response;
+  try {
+    res = await fetch("/api/bbc", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ action, data: data ?? {} }),
+    });
+  } catch {
+    throw new Error("Falha de comunicação com o servidor.");
   }
-  if (res && typeof res === "object" && "error" in res && (res as any).error) {
-    throw new Error((res as any).error);
+  let json: any = null;
+  try {
+    json = await res.json();
+  } catch { /* ignore */ }
+  if (!res.ok || (json && typeof json === "object" && "error" in json && json.error)) {
+    throw new Error(json?.error || "Falha na chamada.");
   }
-  return res as TOut;
+  return json as TOut;
 }
 
 export const getMyProfile = (p?: any) => call("getMyProfile", p?.data);
