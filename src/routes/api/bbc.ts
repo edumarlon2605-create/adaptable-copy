@@ -292,7 +292,7 @@ export const Route = createFileRoute("/api/bbc")({
               const ids = (roles ?? []).map((r: any) => r.user_id);
               if (ids.length === 0) return Response.json([]);
               let query = supabaseAdmin.from("profiles").select("*").in("user_id", ids);
-              if (role === "consultor") query = query.eq("consultor_user_id", userId);
+              if (role === "consultor") query = query.eq("consultor_user_id", userId!);
               const { data: profiles, error } = await query;
               if (error) return jsonError(error.message);
               return Response.json(profiles ?? []);
@@ -387,7 +387,7 @@ export const Route = createFileRoute("/api/bbc")({
               let clientesCount = 0;
               if (clienteIds.length > 0) {
                 let q = supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }).in("user_id", clienteIds);
-                if (role === "consultor") q = q.eq("consultor_user_id", userId);
+                if (role === "consultor") q = q.eq("consultor_user_id", userId!);
                 const { count } = await q;
                 clientesCount = count ?? 0;
               }
