@@ -58,13 +58,13 @@ async function getAuth(request: Request) {
   const { data: roleRow } = await supabaseAdmin
     .from("user_roles")
     .select("role")
-    .eq("user_id", userId)
+    .eq("user_id", userId!)
     .maybeSingle();
   return { supabaseAdmin, userId, role: (roleRow?.role as AppRole) ?? null };
 }
 
 async function profileByUserId(supabaseAdmin: any, userId: string) {
-  const { data } = await supabaseAdmin.from("profiles").select("*").eq("user_id", userId).maybeSingle();
+  const { data } = await supabaseAdmin.from("profiles").select("*").eq("user_id", userId!).maybeSingle();
   return data;
 }
 
@@ -260,7 +260,7 @@ export const Route = createFileRoute("/api/bbc")({
               if (phone !== undefined) updates.phone = phone;
               if (whatsapp !== undefined) updates.whatsapp = whatsapp;
               if (Object.keys(updates).length > 0) {
-                const { error } = await supabaseAdmin.from("profiles").update(updates).eq("user_id", targetId);
+                const { error } = await supabaseAdmin.from("profiles").update(updates as never).eq("user_id", targetId);
                 if (error) return jsonError(error.message);
               }
               if (newRole) {
@@ -342,7 +342,7 @@ export const Route = createFileRoute("/api/bbc")({
               if (phone !== undefined) updates.phone = phone;
               if (whatsapp !== undefined) updates.whatsapp = whatsapp;
               if (status !== undefined) updates.status = status;
-              const { error } = await supabaseAdmin.from("profiles").update(updates).eq("id", id);
+              const { error } = await supabaseAdmin.from("profiles").update(updates as never).eq("id", id);
               if (error) return jsonError(error.message);
               return Response.json({ ok: true });
             }
@@ -595,7 +595,7 @@ export const Route = createFileRoute("/api/bbc")({
               const updates: any = pago
                 ? { status: "pago", pago_em: new Date().toISOString(), pago_por: userId }
                 : { status: "pendente", pago_em: null, pago_por: null };
-              const { error } = await supabaseAdmin.from("carta_parcelas").update(updates).eq("id", id);
+              const { error } = await supabaseAdmin.from("carta_parcelas").update(updates as never).eq("id", id);
               if (error) return jsonError(error.message);
               await supabaseAdmin.from("payment_history").insert({
                 carta_id: parcela.carta_id,
@@ -706,7 +706,7 @@ export const Route = createFileRoute("/api/bbc")({
               for (const key of allowed) {
                 if (data[key] !== undefined) updates[key] = data[key] || null;
               }
-              const { error } = await supabaseAdmin.from("profiles").update(updates).eq("user_id", userId);
+              const { error } = await supabaseAdmin.from("profiles").update(updates as never).eq("user_id", userId!);
               if (error) return jsonError(error.message);
               return Response.json({ ok: true });
             }
@@ -715,8 +715,8 @@ export const Route = createFileRoute("/api/bbc")({
               requireRole("cliente");
               const { kind, path } = data;
               if (!["rg", "cnh", "address_proof"].includes(kind) || !path) return jsonError("Dados incompletos.");
-              const column = `${kind}_doc_path`;
-              const { error } = await supabaseAdmin.from("profiles").update({ [column]: path }).eq("user_id", userId);
+              const column = kind === "address_proof" ? "address_proof_path" : `${kind}_doc_path`;
+              const { error } = await supabaseAdmin.from("profiles").update({ [column]: path } as never).eq("user_id", userId!);
               if (error) return jsonError(error.message);
               return Response.json({ ok: true });
             }
@@ -725,13 +725,13 @@ export const Route = createFileRoute("/api/bbc")({
               requireRole("cliente");
               const { kind } = data;
               if (!["rg", "cnh", "address_proof"].includes(kind)) return jsonError("Dados incompletos.");
-              const column = `${kind}_doc_path`;
+              const column = kind === "address_proof" ? "address_proof_path" : `${kind}_doc_path`;
               const profile = await profileByUserId(supabaseAdmin, userId!);
               const existingPath = profile?.[column];
               if (existingPath) {
                 await supabaseAdmin.storage.from("client-documents").remove([existingPath]);
               }
-              const { error } = await supabaseAdmin.from("profiles").update({ [column]: null }).eq("user_id", userId);
+              const { error } = await supabaseAdmin.from("profiles").update({ [column]: null } as never).eq("user_id", userId!);
               if (error) return jsonError(error.message);
               return Response.json({ ok: true });
             }
