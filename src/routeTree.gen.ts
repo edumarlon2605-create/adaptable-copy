@@ -22,6 +22,7 @@ import { Route as MinhaContaRouteImport } from './routes/minha-conta'
 import { Route as TrabalheConoscoRouteImport } from './routes/trabalhe-conosco'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
 import { Route as AuthenticatedClienteRouteRouteImport } from './routes/_authenticated/cliente/route'
+import { Route as ApiBbcRouteImport } from './routes/api/bbc'
 import { Route as ConsorcioComoFuncionaRouteImport } from './routes/consorcio.como-funciona'
 import { Route as ConsorcioOQueERouteImport } from './routes/consorcio.o-que-e'
 import { Route as ConsorcioVantagensRouteImport } from './routes/consorcio.vantagens'
@@ -102,6 +103,11 @@ const AuthenticatedClienteRouteRoute =
     path: '/cliente',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiBbcRoute = ApiBbcRouteImport.update({
+  id: '/api/bbc',
+  path: '/api/bbc',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConsorcioComoFuncionaRoute = ConsorcioComoFuncionaRouteImport.update({
   id: '/consorcio/como-funciona',
   path: '/consorcio/como-funciona',
@@ -193,6 +199,7 @@ export interface FileRoutesByFullPath {
   '/trabalhe-conosco': typeof TrabalheConoscoRoute
   '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/cliente': typeof AuthenticatedClienteRouteRouteWithChildren
+  '/api/bbc': typeof ApiBbcRoute
   '/consorcio/como-funciona': typeof ConsorcioComoFuncionaRoute
   '/consorcio/o-que-e': typeof ConsorcioOQueERoute
   '/consorcio/vantagens': typeof ConsorcioVantagensRoute
@@ -219,6 +226,7 @@ export interface FileRoutesByTo {
   '/meus-pedidos': typeof MeusPedidosRoute
   '/minha-conta': typeof MinhaContaRoute
   '/trabalhe-conosco': typeof TrabalheConoscoRoute
+  '/api/bbc': typeof ApiBbcRoute
   '/consorcio/como-funciona': typeof ConsorcioComoFuncionaRoute
   '/consorcio/o-que-e': typeof ConsorcioOQueERoute
   '/consorcio/vantagens': typeof ConsorcioVantagensRoute
@@ -249,6 +257,7 @@ export interface FileRoutesById {
   '/trabalhe-conosco': typeof TrabalheConoscoRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/_authenticated/cliente': typeof AuthenticatedClienteRouteRouteWithChildren
+  '/api/bbc': typeof ApiBbcRoute
   '/consorcio/como-funciona': typeof ConsorcioComoFuncionaRoute
   '/consorcio/o-que-e': typeof ConsorcioOQueERoute
   '/consorcio/vantagens': typeof ConsorcioVantagensRoute
@@ -279,6 +288,7 @@ export interface FileRouteTypes {
     | '/trabalhe-conosco'
     | '/admin'
     | '/cliente'
+    | '/api/bbc'
     | '/consorcio/como-funciona'
     | '/consorcio/o-que-e'
     | '/consorcio/vantagens'
@@ -305,6 +315,7 @@ export interface FileRouteTypes {
     | '/meus-pedidos'
     | '/minha-conta'
     | '/trabalhe-conosco'
+    | '/api/bbc'
     | '/consorcio/como-funciona'
     | '/consorcio/o-que-e'
     | '/consorcio/vantagens'
@@ -334,6 +345,7 @@ export interface FileRouteTypes {
     | '/trabalhe-conosco'
     | '/_authenticated/admin'
     | '/_authenticated/cliente'
+    | '/api/bbc'
     | '/consorcio/como-funciona'
     | '/consorcio/o-que-e'
     | '/consorcio/vantagens'
@@ -362,6 +374,7 @@ export interface RootRouteChildren {
   MeusPedidosRoute: typeof MeusPedidosRoute
   MinhaContaRoute: typeof MinhaContaRoute
   TrabalheConoscoRoute: typeof TrabalheConoscoRoute
+  ApiBbcRoute: typeof ApiBbcRoute
   ConsorcioComoFuncionaRoute: typeof ConsorcioComoFuncionaRoute
   ConsorcioOQueERoute: typeof ConsorcioOQueERoute
   ConsorcioVantagensRoute: typeof ConsorcioVantagensRoute
@@ -461,6 +474,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/cliente'
       preLoaderRoute: typeof AuthenticatedClienteRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/bbc': {
+      id: '/api/bbc'
+      path: '/api/bbc'
+      fullPath: '/api/bbc'
+      preLoaderRoute: typeof ApiBbcRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/consorcio/como-funciona': {
       id: '/consorcio/como-funciona'
@@ -630,6 +650,7 @@ const rootRouteChildren: RootRouteChildren = {
   MeusPedidosRoute: MeusPedidosRoute,
   MinhaContaRoute: MinhaContaRoute,
   TrabalheConoscoRoute: TrabalheConoscoRoute,
+  ApiBbcRoute: ApiBbcRoute,
   ConsorcioComoFuncionaRoute: ConsorcioComoFuncionaRoute,
   ConsorcioOQueERoute: ConsorcioOQueERoute,
   ConsorcioVantagensRoute: ConsorcioVantagensRoute,
