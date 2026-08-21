@@ -1,35 +1,37 @@
-// Wrappers cliente-side para o módulo de Cartas.
+// Wrappers cliente-side para o módulo de Cartas — chamam o server route `/api/bbc`.
 import { adminSupabase, clienteSupabase } from "@/lib/dual-supabase";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 type Client = SupabaseClient<any>;
-type Payload<T = any> = { data?: T } | undefined;
 
 async function call<TOut = any>(client: Client, action: string, data?: any): Promise<TOut> {
-  const { data: res, error } = await client.functions.invoke("bbc-api", {
-    body: { action, data: data ?? {} },
-  });
-  if (error) {
-    let msg = error.message || "Falha na chamada.";
-    try {
-      const ctx = (error as any).context;
-      if (ctx && typeof ctx.json === "function") {
-        const j = await ctx.json();
-        if (j?.error) msg = j.error;
-      }
-    } catch { /* ignore */ }
-    throw new Error(msg);
+  const { data: sess } = await client.auth.getSession();
+  const token = sess?.session?.access_token;
+  let res: Response;
+  try {
+    res = await fetch("/api/bbc", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ action, data: data ?? {} }),
+    });
+  } catch {
+    throw new Error("Falha de comunicação com o servidor.");
   }
-  if (res && typeof res === "object" && "error" in res && (res as any).error) {
-    throw new Error((res as any).error);
+  let json: any = null;
+  try {
+    json = await res.json();
+  } catch { /* ignore */ }
+  if (!res.ok || (json && typeof json === "object" && "error" in json && json.error)) {
+    throw new Error(json?.error || "Falha na chamada.");
   }
-  return res as TOut;
+  return json as TOut;
 }
 
-const admin = <T = any>(action: string) => (p?: any) =>
-  call<T>(adminSupabase as any, action, p?.data);
-const cliente = <T = any>(action: string) => (p?: any) =>
-  call<T>(clienteSupabase as any, action, p?.data);
+const admin = <T = any>(action: string) => (p?: any) => call<T>(adminSupabase as any, action, p?.data);
+const cliente = <T = any>(action: string) => (p?: any) => call<T>(clienteSupabase as any, action, p?.data);
 
 // ===================== Helpers puros (client-side) =====================
 export const PRESET_PRAZOS = [12, 24, 36, 48, 60, 72, 84, 120] as const;
