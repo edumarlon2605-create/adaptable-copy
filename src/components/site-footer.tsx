@@ -37,7 +37,7 @@ export function SiteFooter() {
             </ul>
             <div className="mt-6">
               <img
-                src="/selo-ra-2025-sem-fundo.png"
+                src="/selo-ra-2025-oficial.png"
                 alt="Prêmio RA 2025 - Empresa Indicada"
                 loading="lazy"
                 className="mx-auto h-auto w-full max-w-[260px]"
