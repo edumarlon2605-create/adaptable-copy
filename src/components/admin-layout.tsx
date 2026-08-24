@@ -45,7 +45,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           <SidebarContent>
             <div className="px-4 py-6">
               <div className="flex items-center gap-2">
-                <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground font-bold">B</div>
+                <img src="/favicon-512.png" alt="BBC Consórcios" className="h-8 w-8 rounded-lg object-contain" />
                 <span className="font-display font-bold text-primary">BBC Admin</span>
               </div>
             </div>
