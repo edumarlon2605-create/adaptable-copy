@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useAdminAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
-import { Mail, Lock, ShieldAlert } from "lucide-react";
+import { Mail, Lock } from "lucide-react";
 
 export const Route = createFileRoute("/login-admin")({
   head: () => ({

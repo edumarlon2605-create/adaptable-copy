@@ -4,7 +4,7 @@ import { useClienteAuth } from "@/lib/auth-context";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
-import { User, Lock, ShieldCheck } from "lucide-react";
+import { User, Lock } from "lucide-react";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
