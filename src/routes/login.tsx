@@ -48,9 +48,11 @@ function LoginPage() {
       <SiteHeader />
       <main className="mx-auto max-w-md px-4 py-16">
         <div className="text-center mb-8">
-          <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-primary text-primary-foreground">
-            <ShieldCheck className="h-7 w-7" />
-          </div>
+          <img
+            src="/favicon-512.png"
+            alt="BBC Consórcios"
+            className="mx-auto h-16 w-16 rounded-2xl object-contain"
+          />
           <h1 className="mt-4 font-display text-2xl font-bold text-foreground">
             Área do Cliente
           </h1>
