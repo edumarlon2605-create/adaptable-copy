@@ -35,7 +35,7 @@ export function SiteFooter() {
               <li><Link to="/consorcio/como-funciona" className="hover:opacity-100">Como Funciona</Link></li>
               <li><Link to="/consorcio/vantagens" className="hover:opacity-100">Vantagens</Link></li>
             </ul>
-            <div className="mt-6 rounded-2xl bg-white p-4 shadow-xl ring-1 ring-black/10">
+            <div className="mt-6">
               <img
                 src="/selo-ra-2025-oficial.png"
                 alt="Prêmio RA 2025 - Empresa Indicada"
