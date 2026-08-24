@@ -13,9 +13,11 @@ export function SiteFooter() {
         <div className="grid gap-10 md:grid-cols-4">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary-foreground text-primary font-display font-bold">
-                B
-              </div>
+              <img
+                src="/favicon-512.png"
+                alt="BBC Consórcios"
+                className="h-10 w-10 rounded-xl object-contain"
+              />
               <div className="leading-tight">
                 <div className="font-display font-bold text-lg">BBC</div>
                 <div className="text-[10px] uppercase tracking-widest opacity-70">Consórcios</div>
