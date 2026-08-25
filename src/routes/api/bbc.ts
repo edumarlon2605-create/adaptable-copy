@@ -187,8 +187,8 @@ export const Route = createFileRoute("/api/bbc")({
         }
 
         let supabaseAdmin: any;
-        let userId: string | undefined;
-        let role: AppRole | undefined;
+        let userId: string | null | undefined;
+        let role: AppRole | null | undefined;
         try {
           const auth = await getAuth(request);
           supabaseAdmin = auth.supabaseAdmin;
