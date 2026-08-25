@@ -187,8 +187,9 @@ function ClienteHome() {
                   </div>
 
                   <div className="mt-3 rounded-md bg-[#fff8d6] border border-[#f2d97a] px-4 py-2 font-bold text-[#3a3a3a] text-center uppercase tracking-wide">
-                    ENCERRADO
+                    Grupo {pad3(carta.grupo)} · Cota {pad4(carta.cota)}
                   </div>
+
 
                   <dl className="mt-4 text-sm divide-y divide-dashed">
                     <Row label="Valor do Bem" value={fmtBRL(valorBem)} info />
