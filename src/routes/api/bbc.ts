@@ -622,8 +622,9 @@ export const Route = createFileRoute("/api/bbc")({
               if (!id) return jsonError("Parcela não informada.");
               const { data: parcela } = await supabaseAdmin.from("carta_parcelas").select("*").eq("id", id).maybeSingle();
               if (!parcela) return jsonError("Parcela não encontrada.", 404);
+              const pagoEm = randomPagoEm(parcela.vencimento);
               const updates: any = pago
-                ? { status: "pago", pago_em: new Date().toISOString(), pago_por: userId }
+                ? { status: "pago", pago_em: pagoEm.toISOString(), pago_por: userId }
                 : { status: "pendente", pago_em: null, pago_por: null };
               const { error } = await supabaseAdmin.from("carta_parcelas").update(updates as never).eq("id", id);
               if (error) return jsonError(error.message);
@@ -633,7 +634,7 @@ export const Route = createFileRoute("/api/bbc")({
                 installment_number: parcela.numero,
                 amount: parcela.valor,
                 due_date: parcela.vencimento,
-                payment_date: pago ? toISODate(new Date()) : null,
+                payment_date: pago ? toISODate(pagoEm) : null,
                 created_by: userId,
               });
               await recomputeCartaTotals(supabaseAdmin, parcela.carta_id);
@@ -669,9 +670,10 @@ export const Route = createFileRoute("/api/bbc")({
               const { data: pendentes } = await query;
               const list = pendentes ?? [];
               for (const p of list) {
+                const pagoEm = randomPagoEm(p.vencimento);
                 await supabaseAdmin
                   .from("carta_parcelas")
-                  .update({ status: "pago", pago_em: new Date().toISOString(), pago_por: userId })
+                  .update({ status: "pago", pago_em: pagoEm.toISOString(), pago_por: userId })
                   .eq("id", p.id);
                 await supabaseAdmin.from("payment_history").insert({
                   carta_id,
@@ -679,7 +681,7 @@ export const Route = createFileRoute("/api/bbc")({
                   installment_number: p.numero,
                   amount: p.valor,
                   due_date: p.vencimento,
-                  payment_date: p.vencimento,
+                  payment_date: toISODate(pagoEm),
                   created_by: userId,
                 });
               }
