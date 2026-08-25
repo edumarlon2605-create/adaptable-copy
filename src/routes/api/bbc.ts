@@ -417,14 +417,13 @@ export const Route = createFileRoute("/api/bbc")({
                   .eq("role", "consultor");
                 consultoresCount = count ?? 0;
               }
-              const { count: disponiveisCount } = await supabaseAdmin
-                .from("cartas")
-                .select("id", { count: "exact", head: true })
-                .eq("situacao", "disponivel");
-              const { count: vendidasCount } = await supabaseAdmin
-                .from("cartas")
-                .select("id", { count: "exact", head: true })
-                .eq("situacao", "vendida");
+              const { data: cartasRows } = await supabaseAdmin.from("cartas").select("situacao");
+              const cartasList = cartasRows ?? [];
+              const cartasTotal = cartasList.length;
+              const disponiveisCount = cartasList.filter((c: any) => c.situacao === "disponivel").length;
+              const vendidasCount = cartasList.filter(
+                (c: any) => c.situacao === "vendida" || c.situacao === "quitado",
+              ).length;
               const { data: recentProfiles } = await supabaseAdmin
                 .from("profiles")
                 .select("id,name,created_at,user_id")
@@ -445,6 +444,7 @@ export const Route = createFileRoute("/api/bbc")({
               return Response.json({
                 clientes: clientesCount,
                 consultores: consultoresCount,
+                cartasTotal,
                 cartasDisponiveis: disponiveisCount ?? 0,
                 cartasVendidas: vendidasCount ?? 0,
                 recentes,
