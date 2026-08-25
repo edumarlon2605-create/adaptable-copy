@@ -97,7 +97,7 @@ async function recomputeCartaTotals(supabaseAdmin: any, cartaId: string) {
 }
 
 // Data de pagamento aleatória: até 3 dias antes ou depois do vencimento,
-// horário aleatório a partir das 05:00. Nunca repete (usa o set `used`).
+// horário aleatório a partir das 05:00. Nunca repete no mesmo processamento.
 function randomPagoEm(vencimento?: string | null, used?: Set<string>) {
   const base = vencimento ? new Date(`${vencimento}T12:00:00`) : new Date();
   for (let tentativa = 0; tentativa < 200; tentativa++) {
@@ -112,7 +112,8 @@ function randomPagoEm(vencimento?: string | null, used?: Set<string>) {
       return d;
     }
   }
-  const fallback = new Date(base.getFullYear(), base.getMonth(), base.getDate(), 5, 0, 0);
+  const fallbackSeconds = used?.size ?? 0;
+  const fallback = new Date(base.getFullYear(), base.getMonth(), base.getDate(), 5, 0, fallbackSeconds);
   used?.add(fallback.toISOString());
   return fallback;
 }
@@ -656,7 +657,7 @@ export const Route = createFileRoute("/api/bbc")({
                 installment_number: parcela.numero,
                 amount: parcela.valor,
                 due_date: parcela.vencimento,
-                payment_date: pago ? toISODate(pagoEm) : null,
+                payment_date: pago ? pagoEm.toISOString() : null,
                 created_by: userId,
               });
               await recomputeCartaTotals(supabaseAdmin, parcela.carta_id);
@@ -687,27 +688,39 @@ export const Route = createFileRoute("/api/bbc")({
               requireRole("admin", "consultor");
               const { carta_id, numero } = data;
               if (!carta_id) return jsonError("Carta não informada.");
-              let query = supabaseAdmin.from("carta_parcelas").select("*").eq("carta_id", carta_id).neq("status", "pago");
+              let query = supabaseAdmin
+                .from("carta_parcelas")
+                .select("*")
+                .eq("carta_id", carta_id)
+                .order("numero", { ascending: true });
               if (numero) query = query.lte("numero", numero);
-              const { data: pendentes } = await query;
-              const list = pendentes ?? [];
+              const { data: parcelas, error: parcelasError } = await query;
+              if (parcelasError) return jsonError(parcelasError.message);
+              const list = parcelas ?? [];
               const usados = new Set<string>();
+              const historyRows: any[] = [];
               for (const p of list) {
                 const pagoEm = randomPagoEm(p.vencimento, usados);
 
-                await supabaseAdmin
+                const { error: updateError } = await supabaseAdmin
                   .from("carta_parcelas")
                   .update({ status: "pago", pago_em: pagoEm.toISOString(), pago_por: userId })
                   .eq("id", p.id);
-                await supabaseAdmin.from("payment_history").insert({
+                if (updateError) return jsonError(updateError.message);
+
+                historyRows.push({
                   carta_id,
                   event_type: "pagamento_registrado",
                   installment_number: p.numero,
                   amount: p.valor,
                   due_date: p.vencimento,
-                  payment_date: toISODate(pagoEm),
+                  payment_date: pagoEm.toISOString(),
                   created_by: userId,
                 });
+              }
+              if (historyRows.length > 0) {
+                const { error: historyError } = await supabaseAdmin.from("payment_history").insert(historyRows);
+                if (historyError) return jsonError(historyError.message);
               }
               await recomputeCartaTotals(supabaseAdmin, carta_id);
               return Response.json({ ok: true, marked: list.length });
