@@ -58,6 +58,34 @@ function datePartsFromISO(iso?: string | null) {
   return { year: now.getUTCFullYear(), month: now.getUTCMonth(), day: now.getUTCDate() };
 }
 
+const PAYMENT_DAY_RANGE = 3;
+const PAYMENT_START_HOUR_BRASIL = 5;
+const PAYMENT_END_HOUR_BRASIL = 23;
+const BRASILIA_UTC_OFFSET_HOURS = 3;
+
+function randomInt(min: number, max: number) {
+  return min + Math.floor(Math.random() * (max - min + 1));
+}
+
+function pagoEmFromSlot(base: ReturnType<typeof datePartsFromISO>, slot: number) {
+  const hoursPerDay = PAYMENT_END_HOUR_BRASIL - PAYMENT_START_HOUR_BRASIL + 1;
+  const secondsPerDayWindow = hoursPerDay * 60 * 60;
+  const dayOffset = Math.floor(slot / secondsPerDayWindow) - PAYMENT_DAY_RANGE;
+  const secondsInDayWindow = slot % secondsPerDayWindow;
+  const hourBrasil = PAYMENT_START_HOUR_BRASIL + Math.floor(secondsInDayWindow / 3600);
+  const minute = Math.floor((secondsInDayWindow % 3600) / 60);
+  const second = secondsInDayWindow % 60;
+
+  return new Date(Date.UTC(
+    base.year,
+    base.month,
+    base.day + dayOffset,
+    hourBrasil + BRASILIA_UTC_OFFSET_HOURS,
+    minute,
+    second,
+  ));
+}
+
 
 async function getAuth(request: Request) {
   const authHeader = request.headers.get("authorization") || request.headers.get("Authorization");
@@ -109,22 +137,30 @@ async function recomputeCartaTotals(supabaseAdmin: any, cartaId: string) {
 // horário aleatório a partir das 05:00. Nunca repete no mesmo processamento.
 function randomPagoEm(vencimento?: string | null, used?: Set<string>) {
   const base = datePartsFromISO(vencimento);
-  for (let tentativa = 0; tentativa < 200; tentativa++) {
-    const offset = Math.floor(Math.random() * 7) - 3; // -3..+3 dias
-    const horaBrasil = 5 + Math.floor(Math.random() * 19); // 5..23 no horário de Brasília
-    const min = Math.floor(Math.random() * 60);
-    const seg = Math.floor(Math.random() * 60);
-    const d = new Date(Date.UTC(base.year, base.month, base.day + offset, horaBrasil + 3, min, seg));
+  const days = PAYMENT_DAY_RANGE * 2 + 1;
+  const hoursPerDay = PAYMENT_END_HOUR_BRASIL - PAYMENT_START_HOUR_BRASIL + 1;
+  const totalSlots = days * hoursPerDay * 60 * 60;
+
+  for (let tentativa = 0; tentativa < 500; tentativa++) {
+    const d = pagoEmFromSlot(base, randomInt(0, totalSlots - 1));
     const key = d.toISOString();
     if (!used || !used.has(key)) {
       used?.add(key);
       return d;
     }
   }
-  const fallbackSeconds = used?.size ?? 0;
-  const fallback = new Date(Date.UTC(base.year, base.month, base.day, 8, 0, fallbackSeconds));
-  used?.add(fallback.toISOString());
-  return fallback;
+
+  const startSlot = used ? used.size % totalSlots : 0;
+  for (let i = 0; i < totalSlots; i++) {
+    const d = pagoEmFromSlot(base, (startSlot + i) % totalSlots);
+    const key = d.toISOString();
+    if (!used || !used.has(key)) {
+      used?.add(key);
+      return d;
+    }
+  }
+
+  throw new Error("Não foi possível gerar uma data de pagamento única para a parcela.");
 }
 
 
