@@ -691,8 +691,10 @@ export const Route = createFileRoute("/api/bbc")({
               if (numero) query = query.lte("numero", numero);
               const { data: pendentes } = await query;
               const list = pendentes ?? [];
+              const usados = new Set<string>();
               for (const p of list) {
-                const pagoEm = randomPagoEm(p.vencimento);
+                const pagoEm = randomPagoEm(p.vencimento, usados);
+
                 await supabaseAdmin
                   .from("carta_parcelas")
                   .update({ status: "pago", pago_em: pagoEm.toISOString(), pago_por: userId })
