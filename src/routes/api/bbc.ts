@@ -96,16 +96,27 @@ async function recomputeCartaTotals(supabaseAdmin: any, cartaId: string) {
   await supabaseAdmin.from("cartas").update({ parcelas_pagas, valores_pagos }).eq("id", cartaId);
 }
 
-// Data de pagamento aleatória: dia 07–14 do mês do vencimento, horário 05h–23h.
-function randomPagoEm(vencimento?: string | null) {
+// Data de pagamento aleatória: até 3 dias antes ou depois do vencimento,
+// horário aleatório a partir das 05:00. Nunca repete (usa o set `used`).
+function randomPagoEm(vencimento?: string | null, used?: Set<string>) {
   const base = vencimento ? new Date(`${vencimento}T12:00:00`) : new Date();
-  const dia = 7 + Math.floor(Math.random() * 8); // 7..14
-  const hora = 5 + Math.floor(Math.random() * 19); // 5..23
-  const min = Math.floor(Math.random() * 60);
-  const seg = Math.floor(Math.random() * 60);
-  const d = new Date(base.getFullYear(), base.getMonth(), dia, hora, min, seg);
-  return d;
+  for (let tentativa = 0; tentativa < 200; tentativa++) {
+    const offset = Math.floor(Math.random() * 7) - 3; // -3..+3 dias
+    const hora = 5 + Math.floor(Math.random() * 19); // 5..23
+    const min = Math.floor(Math.random() * 60);
+    const seg = Math.floor(Math.random() * 60);
+    const d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + offset, hora, min, seg);
+    const key = d.toISOString();
+    if (!used || !used.has(key)) {
+      used?.add(key);
+      return d;
+    }
+  }
+  const fallback = new Date(base.getFullYear(), base.getMonth(), base.getDate(), 5, 0, 0);
+  used?.add(fallback.toISOString());
+  return fallback;
 }
+
 
 
 function withDynamicStatus(p: any) {
