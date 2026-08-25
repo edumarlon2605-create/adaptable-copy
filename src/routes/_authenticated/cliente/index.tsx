@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import {
   Home, Search, LogOut, Wrench, Barcode, FileText,
-  ChevronLeft, ChevronRight, User, KeyRound, Info, ChevronDown, ChevronUp,
+  User, KeyRound, Info, ChevronDown, ChevronUp,
   Car, Bike, Truck, Ship, Plane, Cog, Sun, Package, Building2,
   TrendingUp,
 } from "lucide-react";
