@@ -607,7 +607,10 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
                 <Info label="Valor da parcela" value={fmtBRL(carta.parcela)} />
                 <Info label="Adesão" value={fmtDate(carta.data_adesao)} />
                 <Info label="1º vencimento" value={fmtDate(carta.primeiro_vencimento)} />
+                <Info label="Último vencimento" value={fmtDate(carta.previsao_encerramento)} />
+                <Info label="Contemplação prevista" value={fmtDate(carta.data_contemplacao)} />
               </div>
+
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <Card title="Total pago" value={fmtBRL(dash!.total_pago)} tone="green" />
                 <Card title="Em aberto" value={fmtBRL(dash!.total_aberto)} tone="amber" />

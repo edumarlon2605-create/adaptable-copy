@@ -43,6 +43,12 @@ function addMonths(iso: string, months: number) {
   d.setMonth(d.getMonth() + months);
   return toISODate(d);
 }
+function addDays(iso: string, days: number) {
+  const d = new Date(iso + "T12:00:00");
+  d.setDate(d.getDate() + days);
+  return toISODate(d);
+}
+
 
 async function getAuth(request: Request) {
   const authHeader = request.headers.get("authorization") || request.headers.get("Authorization");
@@ -546,6 +552,8 @@ export const Route = createFileRoute("/api/bbc")({
               }
               const calc = calcularCarta({ valor_bem, parcelas_totais, percentual_administrativo });
               const primeiro_vencimento = calcularPrimeiroVencimento(data_adesao);
+              const ultimo_vencimento = addMonths(primeiro_vencimento, parcelas_totais - 1);
+              const data_contemplacao = addDays(ultimo_vencimento, 7);
               const payload: any = {
                 administradora,
                 grupo,
@@ -559,6 +567,8 @@ export const Route = createFileRoute("/api/bbc")({
                 percentual_administrativo,
                 data_adesao,
                 primeiro_vencimento,
+                data_contemplacao,
+                previsao_encerramento: ultimo_vencimento,
                 situacao: situacao ?? "disponivel",
                 categoria: categoria ?? null,
                 bem_especifico: bem_especifico ?? null,
@@ -567,6 +577,7 @@ export const Route = createFileRoute("/api/bbc")({
                 saldo_devedor: calc.valor_total,
                 updated_at: new Date().toISOString(),
               };
+
 
               let cartaId = id;
               if (id) {
