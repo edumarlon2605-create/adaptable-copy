@@ -29,6 +29,7 @@ function DashboardPage() {
   const stats = data ?? {
     clientes: 0,
     consultores: 0,
+    cartasTotal: 0,
     cartasDisponiveis: 0,
     cartasVendidas: 0,
     recentes: [] as Array<{ id: string; name: string; role: string; createdAt: string }>,
@@ -47,8 +48,9 @@ function DashboardPage() {
           {isAdmin && (
             <StatCard icon={UserCog} label="Consultores" value={isLoading ? "…" : String(stats.consultores)} />
           )}
+          <StatCard icon={CreditCard} label="Cartas cadastradas" value={isLoading ? "…" : String((stats as any).cartasTotal ?? 0)} />
           <StatCard icon={CreditCard} label="Cartas disponíveis" value={isLoading ? "…" : String(stats.cartasDisponiveis)} />
-          <StatCard icon={Award} label="Cartas vendidas" value={isLoading ? "…" : String(stats.cartasVendidas)} />
+          <StatCard icon={Award} label="Vendidas / quitadas" value={isLoading ? "…" : String(stats.cartasVendidas)} />
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-6">
