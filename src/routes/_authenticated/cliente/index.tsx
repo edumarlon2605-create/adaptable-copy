@@ -186,8 +186,8 @@ function ClienteHome() {
                     <span className="ml-2 align-middle text-xs font-semibold text-muted-foreground">CONSORCIADO</span>
                   </div>
 
-                  <div className="mt-3 rounded-md bg-[#fff8d6] border border-[#f2d97a] px-4 py-2 font-bold text-[#3a3a3a]">
-                    Grupo {pad3(carta.grupo)} - Cota {pad4(carta.cota)} - Versão 00
+                  <div className="mt-3 rounded-md bg-[#fff8d6] border border-[#f2d97a] px-4 py-2 font-bold text-[#3a3a3a] text-center uppercase tracking-wide">
+                    ENCERRADO
                   </div>
 
                   <dl className="mt-4 text-sm divide-y divide-dashed">
