@@ -758,8 +758,9 @@ export const Route = createFileRoute("/api/bbc")({
               return jsonError(`Ação desconhecida: ${action}`, 400);
           }
         } catch (err: any) {
-          const status = err?.__status ?? 400;
-          return jsonError(err?.message ?? "Erro inesperado.", status);
+          const status = err?.__status ?? 500;
+          if (!err?.__status) console.error(`[api/bbc] ${action} failed`, err);
+          return jsonError(err?.message || "Erro inesperado no servidor.", status);
         }
       },
     },

@@ -23,12 +23,20 @@ async function call<TOut = any>(client: Client, action: string, data?: any): Pro
   } catch {
     throw new Error("Falha de comunicação com o servidor.");
   }
+  const raw = await res.text().catch(() => "");
   let json: any = null;
   try {
-    json = await res.json();
-  } catch { /* ignore */ }
+    json = raw ? JSON.parse(raw) : null;
+  } catch { /* resposta não-JSON (ex.: página de erro) */ }
   if (!res.ok || (json && typeof json === "object" && "error" in json && json.error)) {
-    throw new Error(json?.error || "Falha na chamada.");
+    const msg =
+      json?.error ||
+      (res.status === 401
+        ? "Sessão expirada. Entre novamente."
+        : res.status === 403
+          ? "Você não tem permissão para esta ação."
+          : `Erro no servidor (${res.status}). Tente novamente.`);
+    throw new Error(msg);
   }
   return json as TOut;
 }
