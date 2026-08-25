@@ -707,29 +707,47 @@ export const Route = createFileRoute("/api/bbc")({
               if (parcelasError) return jsonError(parcelasError.message);
               const list = parcelas ?? [];
               const usados = new Set<string>();
-              const historyRows: any[] = [];
               for (const p of list) {
                 const pagoEm = randomPagoEm(p.vencimento, usados);
+                const paymentTimestamp = pagoEm.toISOString();
 
                 const { error: updateError } = await supabaseAdmin
                   .from("carta_parcelas")
-                  .update({ status: "pago", pago_em: pagoEm.toISOString(), pago_por: userId })
+                  .update({ status: "pago", pago_em: paymentTimestamp, pago_por: userId })
                   .eq("id", p.id);
                 if (updateError) return jsonError(updateError.message);
 
-                historyRows.push({
+                const historyPayload = {
                   carta_id,
                   event_type: "pagamento_registrado",
                   installment_number: p.numero,
                   amount: p.valor,
                   due_date: p.vencimento,
-                  payment_date: pagoEm.toISOString(),
-                  created_by: userId,
-                });
-              }
-              if (historyRows.length > 0) {
-                const { error: historyError } = await supabaseAdmin.from("payment_history").insert(historyRows);
-                if (historyError) return jsonError(historyError.message);
+                  payment_date: paymentTimestamp,
+                  updated_by: userId,
+                  updated_at: new Date().toISOString(),
+                };
+                const { data: existingHistory } = await supabaseAdmin
+                  .from("payment_history")
+                  .select("id")
+                  .eq("carta_id", carta_id)
+                  .eq("installment_number", p.numero)
+                  .eq("event_type", "pagamento_registrado");
+
+                const ids = (existingHistory ?? []).map((row: any) => row.id).filter(Boolean);
+                if (ids.length > 0) {
+                  const { error: historyUpdateError } = await supabaseAdmin
+                    .from("payment_history")
+                    .update(historyPayload)
+                    .in("id", ids);
+                  if (historyUpdateError) return jsonError(historyUpdateError.message);
+                } else {
+                  const { error: historyInsertError } = await supabaseAdmin.from("payment_history").insert({
+                    ...historyPayload,
+                    created_by: userId,
+                  });
+                  if (historyInsertError) return jsonError(historyInsertError.message);
+                }
               }
               await recomputeCartaTotals(supabaseAdmin, carta_id);
               return Response.json({ ok: true, marked: list.length });
