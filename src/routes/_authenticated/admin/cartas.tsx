@@ -673,7 +673,8 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
                     <AlertDialogTitle>Marcar todas as parcelas como pagas?</AlertDialogTitle>
                     <AlertDialogDescription>
                       Todas as parcelas em aberto ou em atraso serão registradas como pagas,
-                      usando a data de vencimento de cada uma como referência.
+                      com data aleatória entre 3 dias antes e 3 dias depois do vencimento,
+                      horário a partir das 05:00 e sem repetir data/hora entre parcelas.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -707,6 +708,7 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
                       {h.amount != null && (
                         <div className="text-sm">Valor: {fmtBRL(Number(h.amount))}
                           {h.due_date ? ` · Vencimento ${fmtDate(h.due_date)}` : ""}
+                          {h.payment_date ? ` · Pago em ${fmtDT(h.payment_date)}` : ""}
                         </div>
                       )}
                       {h.notes && <div className="text-sm text-muted-foreground mt-1">{h.notes}</div>}
