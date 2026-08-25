@@ -1,7 +1,7 @@
 import { clienteSupabase } from "@/lib/dual-supabase";
 
-async function call<TOut = any>(client: Client, action: string, data?: any): Promise<TOut> {
-  const { data: sess } = await client.auth.getSession();
+async function call<TOut = any>(action: string, data?: any): Promise<TOut> {
+  const { data: sess } = await clienteSupabase.auth.getSession();
   const token = sess?.session?.access_token;
   let res: Response;
   try {
