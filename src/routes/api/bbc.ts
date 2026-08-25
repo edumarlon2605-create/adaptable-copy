@@ -145,18 +145,24 @@ async function generateParcelas(supabaseAdmin: any, cartaId: string, opts: {
   parcelas_valores: number[];
   primeiro_vencimento: string;
 }) {
-  await supabaseAdmin.from("carta_parcelas").delete().eq("carta_id", cartaId);
+  const total = Number(opts.parcelas_totais);
+  if (!Number.isFinite(total) || total < 1 || total > 600) {
+    throw new Error("Quantidade de parcelas inválida.");
+  }
+  const del = await supabaseAdmin.from("carta_parcelas").delete().eq("carta_id", cartaId);
+  if (del.error) throw new Error(`Não foi possível recriar as parcelas: ${del.error.message}`);
   const rows = [];
-  for (let i = 0; i < opts.parcelas_totais; i++) {
+  for (let i = 0; i < total; i++) {
     rows.push({
       carta_id: cartaId,
       numero: i + 1,
       vencimento: addMonths(opts.primeiro_vencimento, i),
-      valor: opts.parcelas_valores[i],
+      valor: opts.parcelas_valores[i] ?? opts.parcelas_valores[opts.parcelas_valores.length - 1] ?? 0,
       status: "pendente",
     });
   }
-  await supabaseAdmin.from("carta_parcelas").insert(rows);
+  const ins = await supabaseAdmin.from("carta_parcelas").insert(rows);
+  if (ins.error) throw new Error(`Não foi possível gerar as parcelas: ${ins.error.message}`);
 }
 
 export const Route = createFileRoute("/api/bbc")({
@@ -174,21 +180,33 @@ export const Route = createFileRoute("/api/bbc")({
         const data = body?.data ?? {};
         if (!action) return jsonError("Ação não informada.");
 
-        const { supabaseAdmin, userId, role } = await getAuth(request);
+        function jsonErrorThrow(message: string, status: number): never {
+          const err: any = new Error(message);
+          err.__status = status;
+          throw err;
+        }
+
+        let supabaseAdmin: any;
+        let userId: string | null | undefined;
+        let role: AppRole | null | undefined;
+        try {
+          const auth = await getAuth(request);
+          supabaseAdmin = auth.supabaseAdmin;
+          userId = auth.userId;
+          role = auth.role;
+        } catch (err: any) {
+          console.error("[api/bbc] auth failure", err);
+          return jsonError(err?.message || "Não foi possível validar a sessão.", 500);
+        }
 
         const requireAuth = () => {
-          if (!userId) throw jsonErrorThrow("Não autenticado.", 401);
+          if (!userId) throw jsonErrorThrow("Sessão expirada. Entre novamente.", 401);
         };
         const requireRole = (...roles: AppRole[]) => {
           requireAuth();
           if (!role || !roles.includes(role)) throw jsonErrorThrow("Acesso negado.", 403);
         };
 
-        function jsonErrorThrow(message: string, status: number): never {
-          const err: any = new Error(message);
-          err.__status = status;
-          throw err;
-        }
 
         try {
           switch (action) {
@@ -740,8 +758,9 @@ export const Route = createFileRoute("/api/bbc")({
               return jsonError(`Ação desconhecida: ${action}`, 400);
           }
         } catch (err: any) {
-          const status = err?.__status ?? 400;
-          return jsonError(err?.message ?? "Erro inesperado.", status);
+          const status = err?.__status ?? 500;
+          if (!err?.__status) console.error(`[api/bbc] ${action} failed`, err);
+          return jsonError(err?.message || "Erro inesperado no servidor.", status);
         }
       },
     },
