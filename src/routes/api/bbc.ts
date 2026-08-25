@@ -760,8 +760,9 @@ export const Route = createFileRoute("/api/bbc")({
                   amount: p.valor,
                   due_date: p.vencimento,
                   payment_date: paymentTimestamp,
+                  created_at: paymentTimestamp,
                   updated_by: userId,
-                  updated_at: new Date().toISOString(),
+                  updated_at: paymentTimestamp,
                 };
                 const { data: existingHistory } = await supabaseAdmin
                   .from("payment_history")
