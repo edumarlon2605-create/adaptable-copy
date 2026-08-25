@@ -43,6 +43,12 @@ function addMonths(iso: string, months: number) {
   d.setMonth(d.getMonth() + months);
   return toISODate(d);
 }
+function addDays(iso: string, days: number) {
+  const d = new Date(iso + "T12:00:00");
+  d.setDate(d.getDate() + days);
+  return toISODate(d);
+}
+
 
 async function getAuth(request: Request) {
   const authHeader = request.headers.get("authorization") || request.headers.get("Authorization");
