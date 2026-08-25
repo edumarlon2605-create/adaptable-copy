@@ -672,7 +672,7 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
                   <AlertDialogHeader>
                     <AlertDialogTitle>Marcar todas as parcelas como pagas?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Todas as parcelas em aberto ou em atraso serão registradas como pagas,
+                      Todas as parcelas serão registradas como pagas,
                       com data aleatória entre 3 dias antes e 3 dias depois do vencimento,
                       horário a partir das 05:00 e sem repetir data/hora entre parcelas.
                     </AlertDialogDescription>
