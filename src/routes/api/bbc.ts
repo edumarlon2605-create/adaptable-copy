@@ -49,6 +49,15 @@ function addDays(iso: string, days: number) {
   return toISODate(d);
 }
 
+function datePartsFromISO(iso?: string | null) {
+  const [yearRaw, monthRaw, dayRaw] = String(iso ?? "").split("-").map(Number);
+  if (Number.isFinite(yearRaw) && Number.isFinite(monthRaw) && Number.isFinite(dayRaw)) {
+    return { year: yearRaw, month: monthRaw - 1, day: dayRaw };
+  }
+  const now = new Date();
+  return { year: now.getUTCFullYear(), month: now.getUTCMonth(), day: now.getUTCDate() };
+}
+
 
 async function getAuth(request: Request) {
   const authHeader = request.headers.get("authorization") || request.headers.get("Authorization");
@@ -99,13 +108,13 @@ async function recomputeCartaTotals(supabaseAdmin: any, cartaId: string) {
 // Data de pagamento aleatória: até 3 dias antes ou depois do vencimento,
 // horário aleatório a partir das 05:00. Nunca repete no mesmo processamento.
 function randomPagoEm(vencimento?: string | null, used?: Set<string>) {
-  const base = vencimento ? new Date(`${vencimento}T12:00:00`) : new Date();
+  const base = datePartsFromISO(vencimento);
   for (let tentativa = 0; tentativa < 200; tentativa++) {
     const offset = Math.floor(Math.random() * 7) - 3; // -3..+3 dias
-    const hora = 5 + Math.floor(Math.random() * 19); // 5..23
+    const horaBrasil = 5 + Math.floor(Math.random() * 19); // 5..23 no horário de Brasília
     const min = Math.floor(Math.random() * 60);
     const seg = Math.floor(Math.random() * 60);
-    const d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + offset, hora, min, seg);
+    const d = new Date(Date.UTC(base.year, base.month, base.day + offset, horaBrasil + 3, min, seg));
     const key = d.toISOString();
     if (!used || !used.has(key)) {
       used?.add(key);
@@ -113,7 +122,7 @@ function randomPagoEm(vencimento?: string | null, used?: Set<string>) {
     }
   }
   const fallbackSeconds = used?.size ?? 0;
-  const fallback = new Date(base.getFullYear(), base.getMonth(), base.getDate(), 5, 0, fallbackSeconds);
+  const fallback = new Date(Date.UTC(base.year, base.month, base.day, 8, 0, fallbackSeconds));
   used?.add(fallback.toISOString());
   return fallback;
 }
