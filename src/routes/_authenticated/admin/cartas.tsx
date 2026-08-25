@@ -628,7 +628,7 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
                 <Button
                   variant="default"
                   className="rounded-full gap-2"
-                  disabled={markAll.isPending || parcelas.every((p: any) => p.status === "pago")}
+                  disabled={markAll.isPending || parcelas.length === 0}
                   onClick={() => setConfirmAll(true)}
                 >
                   <ListChecks className="h-4 w-4" />
