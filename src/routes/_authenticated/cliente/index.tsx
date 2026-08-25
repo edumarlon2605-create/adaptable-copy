@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import {
   Home, Search, LogOut, Wrench, Barcode, FileText,
-  ChevronLeft, ChevronRight, User, KeyRound, Info, ChevronDown, ChevronUp,
+  User, KeyRound, Info, ChevronDown, ChevronUp,
   Car, Bike, Truck, Ship, Plane, Cog, Sun, Package, Building2,
   TrendingUp,
 } from "lucide-react";
@@ -187,8 +187,9 @@ function ClienteHome() {
                   </div>
 
                   <div className="mt-3 rounded-md bg-[#fff8d6] border border-[#f2d97a] px-4 py-2 font-bold text-[#3a3a3a] text-center uppercase tracking-wide">
-                    ENCERRADO
+                    Grupo {pad3(carta.grupo)} · Cota {pad4(carta.cota)}
                   </div>
+
 
                   <dl className="mt-4 text-sm divide-y divide-dashed">
                     <Row label="Valor do Bem" value={fmtBRL(valorBem)} info />
@@ -361,16 +362,13 @@ function ClienteHome() {
                 {/* Coluna 3 — Demonstrativo + Assembleia + Ações */}
                 <section className="flex flex-col gap-4">
 
-                  <div className="rounded-md bg-[#fff8d6] border border-[#f2d97a] px-4 py-3 flex items-center justify-between">
-                    <button className="text-[#176F62]" aria-label="Anterior"><ChevronLeft className="h-5 w-5" /></button>
-                    <div className="text-center">
-                      <div className="text-xs font-semibold uppercase text-[#3a3a3a]">Assembleia</div>
-                      <div className="font-extrabold text-[#3a3a3a]">
-                        {pad3(parcelasPagas + 1)} - {fmtDate(proxima?.vencimento)}
-                      </div>
+                  <div className="rounded-md bg-[#fff8d6] border border-[#f2d97a] px-4 py-3 text-center">
+                    <div className="text-xs font-semibold uppercase text-[#3a3a3a]">Encerrado</div>
+                    <div className="font-extrabold text-[#3a3a3a]">
+                      {carta.data_contemplacao ? String(carta.data_contemplacao).slice(0, 4) : "—"}
                     </div>
-                    <button className="text-[#176F62]" aria-label="Próxima"><ChevronRight className="h-5 w-5" /></button>
                   </div>
+
 
                   <Card title="Antecipar / Quitar" icon={FileText}>
                     <button className="w-full mb-2 rounded-md border border-[#176F62] px-4 py-3 text-left font-semibold text-[#3a3a3a] hover:bg-[#176F62]/5 flex items-center gap-3">
