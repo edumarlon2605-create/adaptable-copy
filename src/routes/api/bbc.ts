@@ -49,6 +49,15 @@ function addDays(iso: string, days: number) {
   return toISODate(d);
 }
 
+function datePartsFromISO(iso?: string | null) {
+  const [yearRaw, monthRaw, dayRaw] = String(iso ?? "").split("-").map(Number);
+  if (Number.isFinite(yearRaw) && Number.isFinite(monthRaw) && Number.isFinite(dayRaw)) {
+    return { year: yearRaw, month: monthRaw - 1, day: dayRaw };
+  }
+  const now = new Date();
+  return { year: now.getUTCFullYear(), month: now.getUTCMonth(), day: now.getUTCDate() };
+}
+
 
 async function getAuth(request: Request) {
   const authHeader = request.headers.get("authorization") || request.headers.get("Authorization");
@@ -97,22 +106,23 @@ async function recomputeCartaTotals(supabaseAdmin: any, cartaId: string) {
 }
 
 // Data de pagamento aleatória: até 3 dias antes ou depois do vencimento,
-// horário aleatório a partir das 05:00. Nunca repete (usa o set `used`).
+// horário aleatório a partir das 05:00. Nunca repete no mesmo processamento.
 function randomPagoEm(vencimento?: string | null, used?: Set<string>) {
-  const base = vencimento ? new Date(`${vencimento}T12:00:00`) : new Date();
+  const base = datePartsFromISO(vencimento);
   for (let tentativa = 0; tentativa < 200; tentativa++) {
     const offset = Math.floor(Math.random() * 7) - 3; // -3..+3 dias
-    const hora = 5 + Math.floor(Math.random() * 19); // 5..23
+    const horaBrasil = 5 + Math.floor(Math.random() * 19); // 5..23 no horário de Brasília
     const min = Math.floor(Math.random() * 60);
     const seg = Math.floor(Math.random() * 60);
-    const d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + offset, hora, min, seg);
+    const d = new Date(Date.UTC(base.year, base.month, base.day + offset, horaBrasil + 3, min, seg));
     const key = d.toISOString();
     if (!used || !used.has(key)) {
       used?.add(key);
       return d;
     }
   }
-  const fallback = new Date(base.getFullYear(), base.getMonth(), base.getDate(), 5, 0, 0);
+  const fallbackSeconds = used?.size ?? 0;
+  const fallback = new Date(Date.UTC(base.year, base.month, base.day, 8, 0, fallbackSeconds));
   used?.add(fallback.toISOString());
   return fallback;
 }
@@ -656,7 +666,7 @@ export const Route = createFileRoute("/api/bbc")({
                 installment_number: parcela.numero,
                 amount: parcela.valor,
                 due_date: parcela.vencimento,
-                payment_date: pago ? toISODate(pagoEm) : null,
+                payment_date: pago ? pagoEm.toISOString() : null,
                 created_by: userId,
               });
               await recomputeCartaTotals(supabaseAdmin, parcela.carta_id);
@@ -687,27 +697,57 @@ export const Route = createFileRoute("/api/bbc")({
               requireRole("admin", "consultor");
               const { carta_id, numero } = data;
               if (!carta_id) return jsonError("Carta não informada.");
-              let query = supabaseAdmin.from("carta_parcelas").select("*").eq("carta_id", carta_id).neq("status", "pago");
+              let query = supabaseAdmin
+                .from("carta_parcelas")
+                .select("*")
+                .eq("carta_id", carta_id)
+                .order("numero", { ascending: true });
               if (numero) query = query.lte("numero", numero);
-              const { data: pendentes } = await query;
-              const list = pendentes ?? [];
+              const { data: parcelas, error: parcelasError } = await query;
+              if (parcelasError) return jsonError(parcelasError.message);
+              const list = parcelas ?? [];
               const usados = new Set<string>();
               for (const p of list) {
                 const pagoEm = randomPagoEm(p.vencimento, usados);
+                const paymentTimestamp = pagoEm.toISOString();
 
-                await supabaseAdmin
+                const { error: updateError } = await supabaseAdmin
                   .from("carta_parcelas")
-                  .update({ status: "pago", pago_em: pagoEm.toISOString(), pago_por: userId })
+                  .update({ status: "pago", pago_em: paymentTimestamp, pago_por: userId })
                   .eq("id", p.id);
-                await supabaseAdmin.from("payment_history").insert({
+                if (updateError) return jsonError(updateError.message);
+
+                const historyPayload = {
                   carta_id,
                   event_type: "pagamento_registrado",
                   installment_number: p.numero,
                   amount: p.valor,
                   due_date: p.vencimento,
-                  payment_date: toISODate(pagoEm),
-                  created_by: userId,
-                });
+                  payment_date: paymentTimestamp,
+                  updated_by: userId,
+                  updated_at: new Date().toISOString(),
+                };
+                const { data: existingHistory } = await supabaseAdmin
+                  .from("payment_history")
+                  .select("id")
+                  .eq("carta_id", carta_id)
+                  .eq("installment_number", p.numero)
+                  .eq("event_type", "pagamento_registrado");
+
+                const ids = (existingHistory ?? []).map((row: any) => row.id).filter(Boolean);
+                if (ids.length > 0) {
+                  const { error: historyUpdateError } = await supabaseAdmin
+                    .from("payment_history")
+                    .update(historyPayload)
+                    .in("id", ids);
+                  if (historyUpdateError) return jsonError(historyUpdateError.message);
+                } else {
+                  const { error: historyInsertError } = await supabaseAdmin.from("payment_history").insert({
+                    ...historyPayload,
+                    created_by: userId,
+                  });
+                  if (historyInsertError) return jsonError(historyInsertError.message);
+                }
               }
               await recomputeCartaTotals(supabaseAdmin, carta_id);
               return Response.json({ ok: true, marked: list.length });
