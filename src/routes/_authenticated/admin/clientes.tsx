@@ -135,6 +135,13 @@ function ClientsManager() {
     onError: (err) => setResetError(mapError(err)),
   });
 
+  const docsMutation = useMutation({
+    mutationFn: (c: any) =>
+      updateClientFn({ data: { id: c.id, documentos_ok: !c.documentos_ok } }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["clients"] }),
+    onError: (err) => alert(mapError(err)),
+  });
+
   function openNew() {
     setEditing(null);
     setForm(EMPTY_FORM);
@@ -342,7 +349,7 @@ function ClientsManager() {
                     </Badge>
                     {c.documentos_ok && (
                       <Badge variant="secondary" className="gap-1">
-                        <FileCheck2 className="h-3 w-3" /> Docs OK
+                        <FileCheck2 className="h-3 w-3" /> Documentos verificados
                       </Badge>
                     )}
                   </div>
@@ -364,6 +371,17 @@ function ClientsManager() {
                   >
                     <KeyRound className="h-4 w-4" />
                     Senha
+                  </Button>
+                  <Button
+                    variant={c.documentos_ok ? "default" : "outline"}
+                    size="sm"
+                    className="rounded-full gap-1"
+                    disabled={docsMutation.isPending}
+                    onClick={() => docsMutation.mutate(c)}
+                    title={c.documentos_ok ? "Remover verificação de documentos" : "Marcar documentos como verificados"}
+                  >
+                    <FileCheck2 className="h-4 w-4" />
+                    {c.documentos_ok ? "Verificados" : "Verificar docs"}
                   </Button>
                   <Button
                     variant="ghost"
