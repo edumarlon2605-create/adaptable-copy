@@ -48,9 +48,10 @@ type FormState = {
   phone: string;
   password: string;
   status: "ativo" | "inativo" | "pendente";
+  documentos_ok: boolean;
 };
 
-const EMPTY_FORM: FormState = { name: "", cpf: "", phone: "", password: "", status: "ativo" };
+const EMPTY_FORM: FormState = { name: "", cpf: "", phone: "", password: "", status: "ativo", documentos_ok: false };
 
 function maskCpf(v: string) {
   const d = v.replace(/\D/g, "").slice(0, 11);
