@@ -331,14 +331,21 @@ function ClientsManager() {
                 <TableCell>{maskCpf(c.cpf || "")}</TableCell>
                 <TableCell>{maskPhone(c.phone || "")}</TableCell>
                 <TableCell>
-                  <Badge
-                    variant={
-                      c.status === "ativo" ? "default" : c.status === "pendente" ? "outline" : "secondary"
-                    }
-                    className="capitalize"
-                  >
-                    {c.status}
-                  </Badge>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <Badge
+                      variant={
+                        c.status === "ativo" ? "default" : c.status === "pendente" ? "outline" : "secondary"
+                      }
+                      className="capitalize"
+                    >
+                      {c.status}
+                    </Badge>
+                    {c.documentos_ok && (
+                      <Badge variant="secondary" className="gap-1">
+                        <FileCheck2 className="h-3 w-3" /> Docs OK
+                      </Badge>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell className="text-right space-x-2">
                   <Button variant="outline" size="sm" className="rounded-full" onClick={() => openEdit(c)}>
