@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Trash2, KeyRound } from "lucide-react";
+import { Plus, Search, Trash2, KeyRound, FileCheck2 } from "lucide-react";
 import { isValidCpf, sanitizeCpf } from "@/lib/cpf";
 import { mapError } from "@/lib/error-messages";
 
@@ -263,6 +263,19 @@ function ClientsManager() {
                   </SelectContent>
                 </Select>
               </div>
+              {editing && (
+                <Button
+                  type="button"
+                  variant={form.documentos_ok ? "default" : "outline"}
+                  className="w-full rounded-full gap-2"
+                  onClick={() => setForm({ ...form, documentos_ok: !form.documentos_ok })}
+                >
+                  <FileCheck2 className="h-4 w-4" />
+                  {form.documentos_ok
+                    ? "Documentos enviados e OK"
+                    : "Marcar documentos como enviados e OK"}
+                </Button>
+              )}
               {formError && (
                 <p className="text-sm text-destructive" role="alert">
                   {formError}
