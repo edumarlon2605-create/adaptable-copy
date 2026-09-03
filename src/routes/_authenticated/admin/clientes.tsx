@@ -150,6 +150,7 @@ function ClientsManager() {
       phone: maskPhone(c.phone || ""),
       password: "",
       status: c.status || "ativo",
+      documentos_ok: !!c.documentos_ok,
     });
     setFormError("");
     setOpen(true);
@@ -175,6 +176,7 @@ function ClientsManager() {
         phone: phoneDigits,
         whatsapp: phoneDigits,
         status: form.status,
+        documentos_ok: form.documentos_ok,
       });
     } else {
       saveMutation.mutate({
