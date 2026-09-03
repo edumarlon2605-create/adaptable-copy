@@ -424,7 +424,7 @@ export const Route = createFileRoute("/api/bbc")({
 
             case "updateClient": {
               requireRole("admin", "consultor");
-              const { id, name, cpf, phone, whatsapp, status } = data;
+              const { id, name, cpf, phone, whatsapp, status, documentos_ok } = data;
               if (!id) return jsonError("Cliente não informado.");
               const { data: existing } = await supabaseAdmin.from("profiles").select("*").eq("id", id).maybeSingle();
               if (!existing) return jsonError("Cliente não encontrado.", 404);
@@ -435,6 +435,7 @@ export const Route = createFileRoute("/api/bbc")({
               if (phone !== undefined) updates.phone = phone;
               if (whatsapp !== undefined) updates.whatsapp = whatsapp;
               if (status !== undefined) updates.status = status;
+              if (documentos_ok !== undefined) updates.documentos_ok = !!documentos_ok;
               const { error } = await supabaseAdmin.from("profiles").update(updates as never).eq("id", id);
               if (error) return jsonError(error.message);
               return Response.json({ ok: true });

@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Trash2, KeyRound } from "lucide-react";
+import { Plus, Search, Trash2, KeyRound, FileCheck2 } from "lucide-react";
 import { isValidCpf, sanitizeCpf } from "@/lib/cpf";
 import { mapError } from "@/lib/error-messages";
 
@@ -48,9 +48,10 @@ type FormState = {
   phone: string;
   password: string;
   status: "ativo" | "inativo" | "pendente";
+  documentos_ok: boolean;
 };
 
-const EMPTY_FORM: FormState = { name: "", cpf: "", phone: "", password: "", status: "ativo" };
+const EMPTY_FORM: FormState = { name: "", cpf: "", phone: "", password: "", status: "ativo", documentos_ok: false };
 
 function maskCpf(v: string) {
   const d = v.replace(/\D/g, "").slice(0, 11);
@@ -149,6 +150,7 @@ function ClientsManager() {
       phone: maskPhone(c.phone || ""),
       password: "",
       status: c.status || "ativo",
+      documentos_ok: !!c.documentos_ok,
     });
     setFormError("");
     setOpen(true);
@@ -174,6 +176,7 @@ function ClientsManager() {
         phone: phoneDigits,
         whatsapp: phoneDigits,
         status: form.status,
+        documentos_ok: form.documentos_ok,
       });
     } else {
       saveMutation.mutate({
@@ -260,6 +263,19 @@ function ClientsManager() {
                   </SelectContent>
                 </Select>
               </div>
+              {editing && (
+                <Button
+                  type="button"
+                  variant={form.documentos_ok ? "default" : "outline"}
+                  className="w-full rounded-full gap-2"
+                  onClick={() => setForm({ ...form, documentos_ok: !form.documentos_ok })}
+                >
+                  <FileCheck2 className="h-4 w-4" />
+                  {form.documentos_ok
+                    ? "Documentos enviados e OK"
+                    : "Marcar documentos como enviados e OK"}
+                </Button>
+              )}
               {formError && (
                 <p className="text-sm text-destructive" role="alert">
                   {formError}
@@ -315,14 +331,21 @@ function ClientsManager() {
                 <TableCell>{maskCpf(c.cpf || "")}</TableCell>
                 <TableCell>{maskPhone(c.phone || "")}</TableCell>
                 <TableCell>
-                  <Badge
-                    variant={
-                      c.status === "ativo" ? "default" : c.status === "pendente" ? "outline" : "secondary"
-                    }
-                    className="capitalize"
-                  >
-                    {c.status}
-                  </Badge>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <Badge
+                      variant={
+                        c.status === "ativo" ? "default" : c.status === "pendente" ? "outline" : "secondary"
+                      }
+                      className="capitalize"
+                    >
+                      {c.status}
+                    </Badge>
+                    {c.documentos_ok && (
+                      <Badge variant="secondary" className="gap-1">
+                        <FileCheck2 className="h-3 w-3" /> Docs OK
+                      </Badge>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell className="text-right space-x-2">
                   <Button variant="outline" size="sm" className="rounded-full" onClick={() => openEdit(c)}>
