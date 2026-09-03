@@ -279,8 +279,8 @@ function ClientsManager() {
                 >
                   <FileCheck2 className="h-4 w-4" />
                   {form.documentos_ok
-                    ? "Documentos enviados e OK"
-                    : "Marcar documentos como enviados e OK"}
+                    ? "Documentos verificados"
+                    : "Marcar documentos como verificados"}
                 </Button>
               )}
               {formError && (
