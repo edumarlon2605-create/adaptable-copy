@@ -304,6 +304,7 @@ export type Database = {
           country: string | null
           cpf: string | null
           created_at: string
+          documentos_ok: boolean
           email: string
           id: string
           marital_status: string | null
@@ -335,6 +336,7 @@ export type Database = {
           country?: string | null
           cpf?: string | null
           created_at?: string
+          documentos_ok?: boolean
           email: string
           id?: string
           marital_status?: string | null
@@ -366,6 +368,7 @@ export type Database = {
           country?: string | null
           cpf?: string | null
           created_at?: string
+          documentos_ok?: boolean
           email?: string
           id?: string
           marital_status?: string | null
