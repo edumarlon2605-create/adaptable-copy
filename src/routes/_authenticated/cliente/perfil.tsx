@@ -282,7 +282,6 @@ function PerfilPage() {
 
                       <div className="mt-6 divide-y divide-border">
                         {[
-                          { key: "rg", label: "RG" },
                           { key: "cnh", label: "CNH" },
                           { key: "address_proof", label: "Comprovante de residência" },
                         ].map((d) => (
@@ -310,8 +309,6 @@ function PerfilPage() {
                       </p>
                     </CardHeader>
                     <CardContent className="grid gap-4">
-                      <DocumentUploader kind="rg" title="RG" url={profile?.rg_doc_url} onChanged={() => qc.invalidateQueries({ queryKey: ["me"] })} />
-                      <Separator />
                       <DocumentUploader kind="cnh" title="CNH" url={profile?.cnh_doc_url} onChanged={() => qc.invalidateQueries({ queryKey: ["me"] })} />
                       <Separator />
                       <DocumentUploader kind="address_proof" title="Comprovante de residência" url={profile?.address_proof_url} onChanged={() => qc.invalidateQueries({ queryKey: ["me"] })} />
