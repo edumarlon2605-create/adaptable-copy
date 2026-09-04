@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Upload, FileText, ExternalLink, Trash2, KeyRound, User, MapPin, Phone, FileBadge } from "lucide-react";
+import { Upload, FileText, ExternalLink, Trash2, KeyRound, User, MapPin, Phone, FileBadge, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { ClienteHeader } from "@/components/cliente-header";
 import { ClienteFooter } from "@/components/cliente-footer";
 import { Button } from "@/components/ui/button";
