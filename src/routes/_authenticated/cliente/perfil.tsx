@@ -281,10 +281,11 @@ function PerfilPage() {
                       </div>
 
                       <div className="mt-6 divide-y divide-border">
-                        {[
-                          { key: "cnh", label: "CNH" },
-                          { key: "address_proof", label: "Comprovante de residência" },
-                        ].map((d) => (
+                      {[
+                        { key: "rg", label: "RG" },
+                        { key: "cnh", label: "CNH" },
+                        { key: "address_proof", label: "Comprovante de residência" },
+                      ].map((d) => (
                           <div key={d.key} className="flex items-center justify-between gap-4 py-3">
                             <div className="flex items-center gap-3">
                               <div className="grid h-9 w-9 place-items-center rounded-xl bg-muted text-muted-foreground">
