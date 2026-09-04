@@ -291,12 +291,21 @@ export const Route = createFileRoute("/api/bbc")({
               if (cpf.length !== 11) return jsonError("CPF inválido.");
               const { data: profile } = await supabaseAdmin
                 .from("profiles")
-                .select("email")
+                .select("email, user_id")
                 .eq("cpf", cpf)
                 .maybeSingle();
               if (!profile) return jsonError("Cliente não encontrado.", 404);
-              return Response.json({ email: profile.email });
+              // O e-mail de login é sempre o da conta de autenticação: o cliente
+              // pode alterar o e-mail de contato no perfil sem perder o acesso.
+              let loginEmail = profile.email as string | null;
+              if (profile.user_id) {
+                const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(profile.user_id);
+                if (authUser?.user?.email) loginEmail = authUser.user.email;
+              }
+              if (!loginEmail) return jsonError("Cliente sem e-mail de acesso.", 404);
+              return Response.json({ email: loginEmail });
             }
+
 
             /* ===================== USERS (admin) ===================== */
             case "listUsers": {
