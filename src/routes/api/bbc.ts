@@ -135,11 +135,11 @@ async function recomputeCartaTotals(supabaseAdmin: any, cartaId: string) {
   await supabaseAdmin.from("cartas").update({ parcelas_pagas, valores_pagos }).eq("id", cartaId);
 }
 
-// Data de pagamento sempre no dia do vencimento (dia 10),
+// Data de pagamento aleatório entre o dia do vencimento (dia 10) e o dia 15,
 // horário aleatório entre 05:00 e 23:59. Nunca repete no mesmo processamento.
 function randomPagoEm(vencimento?: string | null, used?: Set<string>) {
   const base = datePartsFromISO(vencimento);
-  const days = PAYMENT_DAY_RANGE * 2 + 1;
+  const days = PAYMENT_MAX_DAY_OFFSET + 1;
   const hoursPerDay = PAYMENT_END_HOUR_BRASIL - PAYMENT_START_HOUR_BRASIL + 1;
   const totalSlots = days * hoursPerDay * 60 * 60;
 
