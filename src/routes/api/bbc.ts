@@ -224,13 +224,37 @@ async function generateParcelas(supabaseAdmin: any, cartaId: string, opts: {
   if (!Number.isFinite(total) || total < 1 || total > 600) {
     throw new Error("Quantidade de parcelas inválida.");
   }
+  // Preserva pagamentos já registrados (ex.: ao transferir a carta para outro cliente)
+  const { data: existentes } = await supabaseAdmin
+    .from("carta_parcelas")
+    .select("numero,status,valor,vencimento,pago_em,pago_por,observacoes")
+    .eq("carta_id", cartaId);
+  const pagas = new Map<number, any>();
+  for (const p of existentes ?? []) {
+    if (p.status === "pago") pagas.set(Number(p.numero), p);
+  }
   const del = await supabaseAdmin.from("carta_parcelas").delete().eq("carta_id", cartaId);
   if (del.error) throw new Error(`Não foi possível recriar as parcelas: ${del.error.message}`);
   const rows = [];
   for (let i = 0; i < total; i++) {
+    const numero = i + 1;
+    const anterior = pagas.get(numero);
+    if (anterior) {
+      rows.push({
+        carta_id: cartaId,
+        numero,
+        vencimento: anterior.vencimento,
+        valor: anterior.valor,
+        status: "pago",
+        pago_em: anterior.pago_em,
+        pago_por: anterior.pago_por,
+        observacoes: anterior.observacoes ?? null,
+      });
+      continue;
+    }
     rows.push({
       carta_id: cartaId,
-      numero: i + 1,
+      numero,
       vencimento: addMonths(opts.primeiro_vencimento, i),
       valor: opts.parcelas_valores[i] ?? opts.parcelas_valores[opts.parcelas_valores.length - 1] ?? 0,
       status: "pendente",
@@ -238,6 +262,7 @@ async function generateParcelas(supabaseAdmin: any, cartaId: string, opts: {
   }
   const ins = await supabaseAdmin.from("carta_parcelas").insert(rows);
   if (ins.error) throw new Error(`Não foi possível gerar as parcelas: ${ins.error.message}`);
+
 }
 
 export const Route = createFileRoute("/api/bbc")({
