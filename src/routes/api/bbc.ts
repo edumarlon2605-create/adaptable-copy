@@ -672,7 +672,16 @@ export const Route = createFileRoute("/api/bbc")({
 
 
               let cartaId = id;
+              let transferencia: { de: string | null; para: string | null } | null = null;
               if (id) {
+                const { data: anterior } = await supabaseAdmin
+                  .from("cartas")
+                  .select("cliente_id")
+                  .eq("id", id)
+                  .maybeSingle();
+                const antes = anterior?.cliente_id ?? null;
+                const depois = cliente_id || null;
+                if (antes !== depois) transferencia = { de: antes, para: depois };
                 const { error } = await supabaseAdmin.from("cartas").update(payload).eq("id", id);
                 if (error) return jsonError(error.message);
               } else {
@@ -691,6 +700,15 @@ export const Route = createFileRoute("/api/bbc")({
                 event_type: id ? "carta_atualizada" : "carta_criada",
                 created_by: userId,
               });
+              if (transferencia) {
+                await supabaseAdmin.from("payment_history").insert({
+                  carta_id: cartaId,
+                  event_type: "carta_transferida",
+                  notes: `Titularidade alterada (de: ${transferencia.de ?? "sem titular"} para: ${transferencia.para ?? "sem titular"}). Pagamentos e histórico preservados.`,
+                  created_by: userId,
+                });
+              }
+
               return Response.json({ ok: true, id: cartaId });
             }
 
