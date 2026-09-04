@@ -282,7 +282,6 @@ function PerfilPage() {
 
                       <div className="mt-6 divide-y divide-border">
                         {[
-                          { key: "rg", label: "RG" },
                           { key: "cnh", label: "CNH" },
                           { key: "address_proof", label: "Comprovante de residência" },
                         ].map((d) => (
