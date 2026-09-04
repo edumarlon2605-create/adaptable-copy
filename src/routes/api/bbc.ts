@@ -58,7 +58,8 @@ function datePartsFromISO(iso?: string | null) {
   return { year: now.getUTCFullYear(), month: now.getUTCMonth(), day: now.getUTCDate() };
 }
 
-const PAYMENT_DAY_RANGE = 3;
+// Pagamento sempre no próprio dia do vencimento (dia 10), só o horário varia.
+const PAYMENT_DAY_RANGE = 0;
 const PAYMENT_START_HOUR_BRASIL = 5;
 const PAYMENT_END_HOUR_BRASIL = 23;
 const BRASILIA_UTC_OFFSET_HOURS = 3;
@@ -133,8 +134,8 @@ async function recomputeCartaTotals(supabaseAdmin: any, cartaId: string) {
   await supabaseAdmin.from("cartas").update({ parcelas_pagas, valores_pagos }).eq("id", cartaId);
 }
 
-// Data de pagamento aleatória: até 3 dias antes ou depois do vencimento,
-// horário aleatório a partir das 05:00. Nunca repete no mesmo processamento.
+// Data de pagamento sempre no dia do vencimento (dia 10),
+// horário aleatório entre 05:00 e 23:59. Nunca repete no mesmo processamento.
 function randomPagoEm(vencimento?: string | null, used?: Set<string>) {
   const base = datePartsFromISO(vencimento);
   const days = PAYMENT_DAY_RANGE * 2 + 1;
