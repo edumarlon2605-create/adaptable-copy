@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Upload, FileText, ExternalLink, Trash2, KeyRound, User, MapPin, Phone, FileBadge } from "lucide-react";
+import { Upload, FileText, ExternalLink, Trash2, KeyRound, User, MapPin, Phone, FileBadge, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { ClienteHeader } from "@/components/cliente-header";
 import { ClienteFooter } from "@/components/cliente-footer";
 import { Button } from "@/components/ui/button";
@@ -263,22 +263,63 @@ function PerfilPage() {
 
               {/* ============== DOCUMENTOS ============== */}
               <TabsContent value="documentos" className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Documentos</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      Envie fotos ou PDFs dos seus documentos (máx. 5 MB cada).
-                    </p>
-                  </CardHeader>
-                  <CardContent className="grid gap-4">
-                    <DocumentUploader kind="rg" title="RG" url={profile?.rg_doc_url} onChanged={() => qc.invalidateQueries({ queryKey: ["me"] })} />
-                    <Separator />
-                    <DocumentUploader kind="cnh" title="CNH" url={profile?.cnh_doc_url} onChanged={() => qc.invalidateQueries({ queryKey: ["me"] })} />
-                    <Separator />
-                    <DocumentUploader kind="address_proof" title="Comprovante de residência" url={profile?.address_proof_url} onChanged={() => qc.invalidateQueries({ queryKey: ["me"] })} />
-                  </CardContent>
-                </Card>
+                {profile?.documentos_ok ? (
+                  <Card className="border-primary/30">
+                    <CardContent className="pt-6">
+                      <div className="flex items-start gap-4 rounded-2xl bg-primary/10 p-5">
+                        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
+                          <ShieldCheck className="h-6 w-6" />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="font-display text-lg font-semibold text-foreground">
+                            Enviado e documento validado com sucesso
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Nossa equipe conferiu seus documentos. Não é necessário enviar nada novamente.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-6 divide-y divide-border">
+                        {[
+                          { key: "rg", label: "RG" },
+                          { key: "cnh", label: "CNH" },
+                          { key: "address_proof", label: "Comprovante de residência" },
+                        ].map((d) => (
+                          <div key={d.key} className="flex items-center justify-between gap-4 py-3">
+                            <div className="flex items-center gap-3">
+                              <div className="grid h-9 w-9 place-items-center rounded-xl bg-muted text-muted-foreground">
+                                <FileText className="h-4 w-4" />
+                              </div>
+                              <span className="font-medium text-foreground">{d.label}</span>
+                            </div>
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                              <CheckCircle2 className="h-3.5 w-3.5" /> Validado
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Documentos</CardTitle>
+                      <p className="text-sm text-muted-foreground">
+                        Envie fotos ou PDFs dos seus documentos (máx. 5 MB cada). Seus documentos ficam em análise após o envio.
+                      </p>
+                    </CardHeader>
+                    <CardContent className="grid gap-4">
+                      <DocumentUploader kind="rg" title="RG" url={profile?.rg_doc_url} onChanged={() => qc.invalidateQueries({ queryKey: ["me"] })} />
+                      <Separator />
+                      <DocumentUploader kind="cnh" title="CNH" url={profile?.cnh_doc_url} onChanged={() => qc.invalidateQueries({ queryKey: ["me"] })} />
+                      <Separator />
+                      <DocumentUploader kind="address_proof" title="Comprovante de residência" url={profile?.address_proof_url} onChanged={() => qc.invalidateQueries({ queryKey: ["me"] })} />
+                    </CardContent>
+                  </Card>
+                )}
               </TabsContent>
+
 
               {/* ============== SEGURANÇA ============== */}
               <TabsContent value="seguranca" className="mt-6">
