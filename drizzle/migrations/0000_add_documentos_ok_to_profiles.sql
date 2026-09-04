@@ -1,1 +1,0 @@
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS documentos_ok boolean NOT NULL DEFAULT false;
