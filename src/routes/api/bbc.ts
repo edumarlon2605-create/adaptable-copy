@@ -58,7 +58,8 @@ function datePartsFromISO(iso?: string | null) {
   return { year: now.getUTCFullYear(), month: now.getUTCMonth(), day: now.getUTCDate() };
 }
 
-const PAYMENT_DAY_RANGE = 3;
+// Pagamento sempre no próprio dia do vencimento (dia 10), só o horário varia.
+const PAYMENT_DAY_RANGE = 0;
 const PAYMENT_START_HOUR_BRASIL = 5;
 const PAYMENT_END_HOUR_BRASIL = 23;
 const BRASILIA_UTC_OFFSET_HOURS = 3;
