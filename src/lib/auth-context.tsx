@@ -73,7 +73,15 @@ export function ClienteAuthProvider({ children }: { children: React.ReactNode })
       const res = await resolveClienteLogin({ data: { cpf: clean } });
       email = res.email;
     } catch (e: any) {
-      return { error: new Error(e?.message ?? "Usuário não encontrado.") };
+      const msg = String(e?.message ?? "");
+      if (/não encontrado|not found|404/i.test(msg)) {
+        return {
+          error: new Error(
+            "Este CPF não está cadastrado. Confira os números ou fale com seu consultor.",
+          ),
+        };
+      }
+      return { error: new Error("Não foi possível verificar o CPF agora. Tente novamente.") };
     }
 
     const { error } = await clienteSupabase.auth.signInWithPassword({
@@ -82,9 +90,11 @@ export function ClienteAuthProvider({ children }: { children: React.ReactNode })
     });
     if (error) {
       console.error("[cliente-login]", error);
-      if (/invalid/i.test(error.message)) return { error: new Error("Senha inválida.") };
+      if (/invalid|credential/i.test(error.message))
+        return { error: new Error("Senha incorreta para este CPF. Tente novamente.") };
       return { error: new Error("Falha de comunicação com o servidor.") };
     }
+
     return {};
   }, []);
 
