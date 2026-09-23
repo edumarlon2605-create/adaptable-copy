@@ -94,6 +94,8 @@ function ClienteHome() {
   const valorBem = Number(carta?.valor_bem ?? 0);
   const saldoDevedor = Number(resumo?.saldo_devedor ?? 0);
   const valorPago = Number(resumo?.total_pago ?? 0);
+  const paymentRequests: any[] = detail?.payment_requests ?? [];
+  const currentPaymentRequest = paymentRequests[0] ?? null;
 
   const nomeUpper = (profile?.name || "cliente").toUpperCase();
 
@@ -214,6 +216,22 @@ function ClienteHome() {
                       Valor do bem como referência
                     </div>
                   </div>
+
+                  {currentPaymentRequest && (
+                    <div className="mt-4 rounded-md border border-[#f2d97a] bg-[#fff8d6] px-4 py-3">
+                      <div className="text-xs font-bold uppercase text-[#176F62]">
+                        {currentPaymentRequest.status === "pendente"
+                          ? "Pagamento solicitado"
+                          : currentPaymentRequest.status === "confirmado"
+                            ? "Pagamento confirmado"
+                            : "Solicitação cancelada"}
+                      </div>
+                      <div className="mt-1 font-extrabold text-[#3a3a3a]">{fmtBRL(Number(currentPaymentRequest.amount))}</div>
+                      <div className="mt-1 text-xs text-[#4a4a4a]">
+                        Solicitado em {new Date(currentPaymentRequest.requested_at).toLocaleString("pt-BR")}
+                      </div>
+                    </div>
+                  )}
 
 
                   <dl className="mt-4 text-sm divide-y">

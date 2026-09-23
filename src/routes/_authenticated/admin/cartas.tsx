@@ -534,7 +534,6 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
   const histFn = listPaymentHistory;
   const markAllFn = markAllParcelasPagas;
   const [confirmAll, setConfirmAll] = useState(false);
-  const [confirmRequest, setConfirmRequest] = useState(false);
 
   const q = useQuery({
     queryKey: ["carta", cartaId],
@@ -578,7 +577,6 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
     mutationFn: () => requestTotalPayment({ data: { carta_id: cartaId! } }),
     onSuccess: () => {
       invalidateAll();
-      setConfirmRequest(false);
       toast.success("Solicitação de pagamento total enviada.");
     },
     onError: (e) => toast.error(mapError(e)),
@@ -637,7 +635,7 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
                     <Button size="sm" variant="outline" disabled={resolveRequest.isPending} onClick={() => resolveRequest.mutate({ request_id: pendingRequest.id, resolution: "cancelado" })}>Cancelar solicitação</Button>
                   </div>
                 ) : (
-                  <Button className="gap-2" disabled={requestPayment.isPending} onClick={() => setConfirmRequest(true)}>
+                  <Button className="gap-2" disabled={requestPayment.isPending} onClick={() => requestPayment.mutate()}>
                     <Send className="h-4 w-4" /> Solicitar pagamento total
                   </Button>
                 )}
@@ -728,22 +726,6 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
                       onClick={() => markAll.mutate()}
                     >
                       {markAll.isPending ? "Processando..." : "Confirmar"}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-              <AlertDialog open={confirmRequest} onOpenChange={setConfirmRequest}>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Solicitar pagamento total?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Será enviada uma solicitação de {fmtBRL(carta?.valor_bem)}, correspondente ao Valor do Bem. As parcelas não serão alteradas.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction disabled={requestPayment.isPending} onClick={() => requestPayment.mutate()}>
-                      {requestPayment.isPending ? "Enviando..." : "Enviar solicitação"}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

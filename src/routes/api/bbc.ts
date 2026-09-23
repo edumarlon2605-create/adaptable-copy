@@ -576,6 +576,11 @@ export const Route = createFileRoute("/api/bbc")({
                 .select("id,grupo,cota,valor_bem,situacao,cliente:profiles!cartas_cliente_id_fkey(name,consultor_user_id)")
                 .order("updated_at", { ascending: false });
               const cartasList = cartasRows ?? [];
+              const cartaIds = cartasList.map((c: any) => c.id);
+              const { data: pendingRequests } = cartaIds.length
+                ? await supabaseAdmin.from("payment_requests").select("id,carta_id,amount,requested_at").in("carta_id", cartaIds).eq("status", "pendente")
+                : { data: [] };
+              const pendingByCarta = new Map((pendingRequests ?? []).map((request: any) => [request.carta_id, request]));
               const cartasTotal = cartasList.length;
               const disponiveisCount = cartasList.filter((c: any) => c.situacao === "disponivel").length;
               const vendidasCount = cartasList.filter(
@@ -606,6 +611,7 @@ export const Route = createFileRoute("/api/bbc")({
                 cartasVendidas: vendidasCount ?? 0,
                 cartas: cartasList
                   .filter((c: any) => role === "admin" || c.cliente?.consultor_user_id === userId)
+                  .map((c: any) => ({ ...c, pending_request: pendingByCarta.get(c.id) ?? null }))
                   .slice(0, 8),
                 recentes,
               });

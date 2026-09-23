@@ -1,9 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AdminLayout } from "@/components/admin-layout";
 import { useAuth } from "@/lib/auth-context";
 import { getDashboardStats } from "@/lib/admin.functions";
 import { Users, UserCog, CreditCard, Award } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { requestTotalPayment } from "@/lib/cartas.functions";
+import { toast } from "sonner";
+import { mapError } from "@/lib/error-messages";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
@@ -17,6 +21,7 @@ export const Route = createFileRoute("/_authenticated/admin/")({
 });
 
 function DashboardPage() {
+  const qc = useQueryClient();
   const { role } = useAuth();
   const isAdmin = role === "admin";
   const fetchStats = getDashboardStats;
@@ -33,7 +38,16 @@ function DashboardPage() {
     cartasDisponiveis: 0,
     cartasVendidas: 0,
     recentes: [] as Array<{ id: string; name: string; role: string; createdAt: string }>,
+    cartas: [] as any[],
   };
+  const requestPayment = useMutation({
+    mutationFn: (cartaId: string) => requestTotalPayment({ data: { carta_id: cartaId } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "dashboard"] });
+      toast.success("Solicitação de pagamento total enviada.");
+    },
+    onError: (error) => toast.error(mapError(error)),
+  });
 
   return (
     <AdminLayout>
@@ -51,6 +65,36 @@ function DashboardPage() {
           <StatCard icon={CreditCard} label="Cartas cadastradas" value={isLoading ? "…" : String((stats as any).cartasTotal ?? 0)} />
           <StatCard icon={CreditCard} label="Cartas disponíveis" value={isLoading ? "…" : String(stats.cartasDisponiveis)} />
           <StatCard icon={Award} label="Vendidas / quitadas" value={isLoading ? "…" : String(stats.cartasVendidas)} />
+        </div>
+
+        <div className="rounded-2xl border border-border bg-card p-6">
+          <h2 className="font-semibold text-lg mb-4">Solicitar pagamento total</h2>
+          {isLoading ? (
+            <p className="text-sm text-muted-foreground">Carregando…</p>
+          ) : stats.cartas.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhuma carta cadastrada.</p>
+          ) : (
+            <div className="divide-y divide-border">
+              {stats.cartas.map((carta: any) => (
+                <div key={carta.id} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div className="font-medium">{carta.cliente?.name ?? "Sem cliente"} · Grupo {carta.grupo} / Cota {carta.cota}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(carta.valor_bem ?? 0))}
+                      {carta.pending_request ? ` · Solicitado em ${new Date(carta.pending_request.requested_at).toLocaleString("pt-BR")}` : ""}
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    disabled={Boolean(carta.pending_request) || requestPayment.isPending}
+                    onClick={() => requestPayment.mutate(carta.id)}
+                  >
+                    {carta.pending_request ? "Pagamento solicitado" : "Solicitar pagamento total"}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-6">
