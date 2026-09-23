@@ -460,7 +460,7 @@ function ClienteHome() {
                     <button className="w-full mb-2 rounded-md border border-[#176F62] px-4 py-3 text-left font-semibold text-[#3a3a3a] hover:bg-[#176F62]/5 flex items-center gap-3">
                       <FileText className="h-5 w-5 text-[#176F62]" /> Antecipar Parcelas
                     </button>
-                    <button className="w-full rounded-md border border-[#e0a800] bg-[#fff8d6] px-4 py-3 text-left font-semibold text-[#3a3a3a] hover:bg-[#fff2a8] flex items-center gap-3">
+                    <button className="w-full rounded-md border border-[#176F62] px-4 py-3 text-left font-semibold text-[#3a3a3a] hover:bg-[#176F62]/5 flex items-center gap-3">
                       <FileText className="h-5 w-5 text-[#176F62]" /> Quitar Saldo Devedor
                     </button>
                   </Card>
