@@ -15,13 +15,15 @@ export function mapError(err: unknown, fallback = "Não foi possível concluir a
 
   // Casos específicos por conteúdo/código
   if (code === "23505" || /duplicate|unique|already/i.test(lower)) {
+    if (/cnpj/.test(lower)) return "CNPJ já cadastrado.";
     if (/cpf/.test(lower)) return "CPF já cadastrado.";
     if (/email/.test(lower)) return "E-mail já cadastrado.";
     return "Registro duplicado.";
   }
   if (/cpf inválido|invalid cpf/i.test(lower)) return "CPF inválido.";
+  if (/cnpj inválido|invalid cnpj/i.test(lower)) return "CNPJ inválido.";
   if (/user not found|no user/i.test(lower)) return "Usuário não encontrado.";
-  if (/invalid login credentials|invalid_grant/i.test(lower)) return "CPF ou senha inválidos.";
+  if (/invalid login credentials|invalid_grant/i.test(lower)) return "CPF/CNPJ ou senha inválidos.";
   if (/wrong password|invalid password/i.test(lower)) return "Senha inválida.";
   if (/password.*(short|6)|weak.password/i.test(lower)) return "A senha deve ter pelo menos 6 caracteres.";
   if (/forbidden|permission|not authorized|rls|policy/i.test(lower)) return "Permissão insuficiente.";

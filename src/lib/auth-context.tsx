@@ -54,7 +54,7 @@ function useSessionState(client: SupabaseClient) {
 /* -------------------- CLIENTE -------------------- */
 
 interface ClienteAuth extends SessionState {
-  signInWithCPF: (cpf: string, password: string) => Promise<{ error?: Error }>;
+  signInWithDocument: (document: string, password: string) => Promise<{ error?: Error }>;
   signOut: () => Promise<void>;
 }
 
@@ -63,14 +63,14 @@ const ClienteCtx = createContext<ClienteAuth | undefined>(undefined);
 export function ClienteAuthProvider({ children }: { children: React.ReactNode }) {
   const state = useSessionState(clienteSupabase);
 
-  const signInWithCPF = useCallback(async (cpf: string, password: string) => {
-    const clean = cpf.replace(/\D/g, "");
-    if (clean.length !== 11) return { error: new Error("CPF inválido.") };
+  const signInWithDocument = useCallback(async (document: string, password: string) => {
+    const clean = document.replace(/\D/g, "");
+    if (clean.length !== 11 && clean.length !== 14) return { error: new Error("CPF/CNPJ inválido.") };
     if (!password) return { error: new Error("Informe a senha.") };
 
     let email: string;
     try {
-      const res = await resolveClienteLogin({ data: { cpf: clean } });
+      const res = await resolveClienteLogin({ data: { document: clean } });
       email = res.email;
     } catch (e: any) {
       return { error: new Error(e?.message ?? "Usuário não encontrado.") };
@@ -93,7 +93,7 @@ export function ClienteAuthProvider({ children }: { children: React.ReactNode })
   }, []);
 
   return (
-    <ClienteCtx.Provider value={{ ...state, signInWithCPF, signOut }}>
+    <ClienteCtx.Provider value={{ ...state, signInWithDocument, signOut }}>
       {children}
     </ClienteCtx.Provider>
   );
