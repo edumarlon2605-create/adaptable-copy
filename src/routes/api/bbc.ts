@@ -929,6 +929,7 @@ export const Route = createFileRoute("/api/bbc")({
               requireRole("cliente");
               const allowed = [
                 "name", "rg", "birth_date", "marital_status", "profession",
+                "corporate_name", "cnae",
                 "email", "phone", "whatsapp", "cep", "street", "number",
                 "complement", "neighborhood", "city", "state", "country",
               ];
