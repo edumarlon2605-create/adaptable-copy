@@ -537,13 +537,19 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
 
   const q = useQuery({
     queryKey: ["carta", cartaId],
-    queryFn: () => getFn({ data: { id: cartaId! } }),
+    queryFn: () => {
+      if (!cartaId) throw new Error("Carta não informada.");
+      return getFn({ data: { id: cartaId } });
+    },
     enabled: !!cartaId,
     refetchOnWindowFocus: true,
   });
   const hist = useQuery({
     queryKey: ["payment-history", cartaId],
-    queryFn: () => histFn({ data: { carta_id: cartaId! } }),
+    queryFn: () => {
+      if (!cartaId) throw new Error("Carta não informada.");
+      return histFn({ data: { carta_id: cartaId } });
+    },
     enabled: !!cartaId,
     refetchOnWindowFocus: true,
   });
@@ -564,7 +570,10 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
   });
 
   const markAll = useMutation({
-    mutationFn: () => markAllFn({ data: { carta_id: cartaId! } }),
+    mutationFn: () => {
+      if (!cartaId) throw new Error("Carta não informada.");
+      return markAllFn({ data: { carta_id: cartaId } });
+    },
     onSuccess: (r: any) => {
       invalidateAll();
       setConfirmAll(false);
@@ -574,7 +583,10 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
   });
 
   const requestPayment = useMutation({
-    mutationFn: () => requestTotalPayment({ data: { carta_id: cartaId! } }),
+    mutationFn: () => {
+      if (!cartaId) throw new Error("Carta não informada.");
+      return requestTotalPayment({ data: { carta_id: cartaId } });
+    },
     onSuccess: () => {
       invalidateAll();
       toast.success("Solicitação de pagamento total enviada.");
