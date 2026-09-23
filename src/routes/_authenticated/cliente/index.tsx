@@ -70,6 +70,7 @@ function ClienteHome() {
 
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [extratoOpen, setExtratoOpen] = useState(false);
+  const [paymentDetailsOpen, setPaymentDetailsOpen] = useState(false);
   const list = (cartas as any[]) || [];
   const carta = list[selectedIdx] ?? null;
 
@@ -253,15 +254,28 @@ function ClienteHome() {
                         Solicitado em {new Date(currentPaymentRequest.requested_at).toLocaleString("pt-BR")}
                       </div>
                       {currentPaymentRequest.recipient_name && (
-                        <dl className="mt-3 grid gap-1 border-t border-[#f2d97a] pt-3 text-xs text-[#4a4a4a]">
-                          <div><dt className="inline font-bold">Recebedor: </dt><dd className="inline">{currentPaymentRequest.recipient_name}</dd></div>
-                          <div><dt className="inline font-bold">CPF/CNPJ: </dt><dd className="inline">{currentPaymentRequest.recipient_document}</dd></div>
-                          <div><dt className="inline font-bold">Banco: </dt><dd className="inline">{currentPaymentRequest.bank_name}</dd></div>
-                          <div><dt className="inline font-bold">Agência: </dt><dd className="inline">{currentPaymentRequest.bank_agency}</dd></div>
-                          <div><dt className="inline font-bold">Conta: </dt><dd className="inline">{currentPaymentRequest.bank_account}</dd></div>
-                          <div><dt className="inline font-bold">Tipo: </dt><dd className="inline">{currentPaymentRequest.bank_account_type === "poupanca" ? "Poupança" : currentPaymentRequest.bank_account_type === "pagamento" ? "Pagamento" : "Corrente"}</dd></div>
-                          <div><dt className="inline font-bold">Titular: </dt><dd className="inline">{currentPaymentRequest.bank_account_holder}</dd></div>
-                        </dl>
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => setPaymentDetailsOpen((open) => !open)}
+                            aria-expanded={paymentDetailsOpen}
+                            className="mt-3 flex w-full items-center justify-between border-t border-[#f2d97a] pt-2 text-xs font-bold text-[#176F62]"
+                          >
+                            <span>{paymentDetailsOpen ? "Recolher" : "Ver detalhes"}</span>
+                            {paymentDetailsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                          </button>
+                          {paymentDetailsOpen && (
+                            <dl className="mt-2 grid gap-1 text-xs text-[#4a4a4a]">
+                              <div><dt className="inline font-bold">Recebedor: </dt><dd className="inline">{currentPaymentRequest.recipient_name}</dd></div>
+                              <div><dt className="inline font-bold">CPF/CNPJ: </dt><dd className="inline">{currentPaymentRequest.recipient_document}</dd></div>
+                              <div><dt className="inline font-bold">Banco: </dt><dd className="inline">{currentPaymentRequest.bank_name}</dd></div>
+                              <div><dt className="inline font-bold">Agência: </dt><dd className="inline">{currentPaymentRequest.bank_agency}</dd></div>
+                              <div><dt className="inline font-bold">Conta: </dt><dd className="inline">{currentPaymentRequest.bank_account}</dd></div>
+                              <div><dt className="inline font-bold">Tipo: </dt><dd className="inline">{currentPaymentRequest.bank_account_type === "poupanca" ? "Poupança" : currentPaymentRequest.bank_account_type === "pagamento" ? "Pagamento" : "Corrente"}</dd></div>
+                              <div><dt className="inline font-bold">Titular: </dt><dd className="inline">{currentPaymentRequest.bank_account_holder}</dd></div>
+                            </dl>
+                          )}
+                        </>
                       )}
                     </div>
                   )}
