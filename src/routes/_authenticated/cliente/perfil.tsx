@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Upload, FileText, ExternalLink, Trash2, KeyRound, User, MapPin, Phone, FileBadge, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { Upload, FileText, ExternalLink, Trash2, KeyRound, User, MapPin, Phone, FileBadge, ShieldCheck, CheckCircle2, Building2 } from "lucide-react";
 import { ClienteHeader } from "@/components/cliente-header";
 import { ClienteFooter } from "@/components/cliente-footer";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import {
 } from "@/lib/client-profile.functions";
 import { clienteSupabase } from "@/lib/dual-supabase";
 import { mapError } from "@/lib/error-messages";
+import { formatCnpj } from "@/lib/cnpj";
 
 export const Route = createFileRoute("/_authenticated/cliente/perfil")({
   head: () => ({
@@ -52,12 +53,13 @@ const MARITAL = [
 
 type Form = {
   name: string; rg: string; birth_date: string; marital_status: string; profession: string;
+  corporate_name: string; cnae: string;
   email: string; phone: string; whatsapp: string;
   cep: string; street: string; number: string; complement: string;
   neighborhood: string; city: string; state: string; country: string;
 };
 const emptyForm: Form = {
-  name: "", rg: "", birth_date: "", marital_status: "", profession: "",
+  name: "", rg: "", birth_date: "", marital_status: "", profession: "", corporate_name: "", cnae: "",
   email: "", phone: "", whatsapp: "",
   cep: "", street: "", number: "", complement: "",
   neighborhood: "", city: "", state: "", country: "Brasil",
@@ -79,6 +81,8 @@ function PerfilPage() {
       birth_date: profile.birth_date || "",
       marital_status: profile.marital_status || "",
       profession: profile.profession || "",
+      corporate_name: profile.corporate_name || "",
+      cnae: profile.cnae || "",
       email: profile.email?.endsWith("@clientes.bbc.local") ? "" : (profile.email || ""),
       phone: maskPhone(profile.phone || ""),
       whatsapp: maskPhone(profile.whatsapp || ""),
@@ -128,6 +132,8 @@ function PerfilPage() {
     mutation.mutate(form);
   }
 
+  const isCompany = profile?.person_type === "cnpj";
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <ClienteHeader />
@@ -148,9 +154,13 @@ function PerfilPage() {
           </div>
         ) : (
           <form onSubmit={onSubmit}>
-            <Tabs defaultValue="pessoais" className="w-full">
-              <TabsList className="grid grid-cols-2 sm:grid-cols-5 h-auto">
-                <TabsTrigger value="pessoais" className="gap-1"><User className="h-4 w-4" />Pessoais</TabsTrigger>
+              <Tabs defaultValue={isCompany ? "empresa" : "pessoais"} className="w-full">
+               <TabsList className="grid grid-cols-2 sm:grid-cols-5 h-auto">
+                 {isCompany ? (
+                   <TabsTrigger value="empresa" className="gap-1"><Building2 className="h-4 w-4" />Empresa</TabsTrigger>
+                 ) : (
+                   <TabsTrigger value="pessoais" className="gap-1"><User className="h-4 w-4" />Pessoais</TabsTrigger>
+                 )}
                 <TabsTrigger value="contato" className="gap-1"><Phone className="h-4 w-4" />Contato</TabsTrigger>
                 <TabsTrigger value="endereco" className="gap-1"><MapPin className="h-4 w-4" />Endereço</TabsTrigger>
                 <TabsTrigger value="documentos" className="gap-1"><FileBadge className="h-4 w-4" />Documentos</TabsTrigger>
@@ -158,7 +168,7 @@ function PerfilPage() {
               </TabsList>
 
               {/* ============== PESSOAIS ============== */}
-              <TabsContent value="pessoais" className="mt-6">
+              {!isCompany && <TabsContent value="pessoais" className="mt-6">
                 <Card>
                   <CardHeader><CardTitle>Dados Pessoais</CardTitle></CardHeader>
                   <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -187,7 +197,27 @@ function PerfilPage() {
                     </Field>
                   </CardContent>
                 </Card>
-              </TabsContent>
+              </TabsContent>}
+
+              {isCompany && <TabsContent value="empresa" className="mt-6">
+                <Card>
+                  <CardHeader><CardTitle>Dados da Empresa</CardTitle></CardHeader>
+                  <CardContent className="grid gap-4 sm:grid-cols-2">
+                    <Field label="Razão Social" className="sm:col-span-2">
+                      <Input value={form.corporate_name} onChange={(e) => setForm({ ...form, corporate_name: e.target.value })} required />
+                    </Field>
+                    <Field label="CNPJ">
+                      <Input value={formatCnpj(profile?.cnpj || "")} readOnly disabled />
+                    </Field>
+                    <Field label="CNAE">
+                      <Input value={form.cnae} onChange={(e) => setForm({ ...form, cnae: e.target.value })} required />
+                    </Field>
+                    <Field label="Nome do responsável" className="sm:col-span-2">
+                      <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+                    </Field>
+                  </CardContent>
+                </Card>
+              </TabsContent>}
 
               {/* ============== CONTATO ============== */}
               <TabsContent value="contato" className="mt-6">
@@ -203,7 +233,7 @@ function PerfilPage() {
                         autoComplete="email"
                       />
                       <p className="text-xs text-muted-foreground mt-1">
-                        Este e-mail passa a ser usado para comunicações. O login continua sendo por CPF.
+                        Este e-mail passa a ser usado para comunicações. O login continua sendo por {isCompany ? "CNPJ" : "CPF"}.
                       </p>
                     </Field>
                     <Field label="Celular">
