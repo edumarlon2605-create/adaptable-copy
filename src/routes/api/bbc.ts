@@ -835,7 +835,16 @@ export const Route = createFileRoute("/api/bbc")({
                 amount: carta.valor_bem,
                 status: "pendente",
                 payment_date: now,
-                notes: "Pagamento total solicitado pelo Valor do Bem.",
+                 notes: [
+                   "Pagamento total solicitado pelo Valor do Bem.",
+                   `Recebedor: ${recipient.recipient_name}`,
+                   `CPF/CNPJ: ${recipient.recipient_document}`,
+                   `Banco: ${recipient.bank_name}`,
+                   `Agência: ${recipient.bank_agency}`,
+                   `Conta: ${recipient.bank_account}`,
+                   `Tipo: ${recipient.bank_account_type === "poupanca" ? "Poupança" : recipient.bank_account_type === "pagamento" ? "Pagamento" : "Corrente"}`,
+                   `Titular: ${recipient.bank_account_holder}`,
+                 ].join(" · "),
                 created_by: userId,
                 created_at: now,
               });
