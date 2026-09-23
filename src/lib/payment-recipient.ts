@@ -1,9 +1,11 @@
 import { z } from "zod";
+import { isValidCpf } from "@/lib/cpf";
+import { isValidCnpj } from "@/lib/cnpj";
 
 export const paymentRecipientSchema = z.object({
   recipient_name: z.string().trim().min(2, "Informe o nome ou razão social.").max(150),
   recipient_document: z.string().transform((value) => value.replace(/\D/g, "")).refine(
-    (value) => value.length === 11 || value.length === 14,
+    (value) => isValidCpf(value) || isValidCnpj(value),
     "Informe um CPF ou CNPJ válido.",
   ),
   bank_name: z.string().trim().min(2, "Informe o banco.").max(100),
