@@ -789,7 +789,9 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
                       {h.amount != null && (
                         <div className="text-sm">Valor: {fmtBRL(Number(h.amount))}
                           {h.due_date ? ` · Vencimento ${fmtDate(h.due_date)}` : ""}
-                          {h.payment_date ? ` · Pago em ${fmtDT(h.payment_date)}` : ""}
+                          {h.payment_date
+                            ? ` · ${h.event_type === "pagamento_total_solicitado" ? "Solicitado em" : h.event_type === "pagamento_total_cancelado" ? "Cancelado em" : "Pago em"} ${fmtDT(h.payment_date)}`
+                            : ""}
                         </div>
                       )}
                       {h.notes && <div className="text-sm text-muted-foreground mt-1">{h.notes}</div>}
