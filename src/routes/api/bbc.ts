@@ -927,6 +927,14 @@ export const Route = createFileRoute("/api/bbc")({
 
             case "updateMyProfile": {
               requireRole("cliente");
+              const profile = await profileByUserId(supabaseAdmin, userId!);
+              if (!profile) return jsonError("Perfil não encontrado.", 404);
+              const administratorCpf = data.administrator_cpf === undefined
+                ? undefined
+                : String(data.administrator_cpf ?? "").replace(/\D/g, "");
+              if (profile.person_type === "cnpj" && administratorCpf && !isValidCpf(administratorCpf)) {
+                return jsonError("CPF do administrador inválido.");
+              }
               const allowed = [
                 "name", "rg", "birth_date", "marital_status", "profession",
                 "corporate_name", "cnae",
@@ -936,6 +944,9 @@ export const Route = createFileRoute("/api/bbc")({
               const updates: Record<string, any> = {};
               for (const key of allowed) {
                 if (data[key] !== undefined) updates[key] = data[key] || null;
+              }
+              if (profile.person_type === "cnpj" && administratorCpf !== undefined) {
+                updates.administrator_cpf = administratorCpf || null;
               }
               const { error } = await supabaseAdmin.from("profiles").update(updates as never).eq("user_id", userId!);
               if (error) return jsonError(error.message);

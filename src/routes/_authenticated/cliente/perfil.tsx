@@ -58,13 +58,13 @@ const MARITAL = [
 
 type Form = {
   name: string; rg: string; birth_date: string; marital_status: string; profession: string;
-  corporate_name: string; cnae: string;
+  corporate_name: string; cnae: string; administrator_cpf: string;
   email: string; phone: string; whatsapp: string;
   cep: string; street: string; number: string; complement: string;
   neighborhood: string; city: string; state: string; country: string;
 };
 const emptyForm: Form = {
-  name: "", rg: "", birth_date: "", marital_status: "", profession: "", corporate_name: "", cnae: "",
+  name: "", rg: "", birth_date: "", marital_status: "", profession: "", corporate_name: "", cnae: "", administrator_cpf: "",
   email: "", phone: "", whatsapp: "",
   cep: "", street: "", number: "", complement: "",
   neighborhood: "", city: "", state: "", country: "Brasil",
@@ -88,6 +88,7 @@ function PerfilPage() {
       profession: profile.profession || "",
       corporate_name: profile.corporate_name || "",
       cnae: profile.cnae || "",
+      administrator_cpf: maskCPF(profile.administrator_cpf || ""),
       email: profile.email?.endsWith("@clientes.bbc.local") ? "" : (profile.email || ""),
       phone: maskPhone(profile.phone || ""),
       whatsapp: maskPhone(profile.whatsapp || ""),
@@ -160,9 +161,12 @@ function PerfilPage() {
         ) : (
           <form onSubmit={onSubmit}>
               <Tabs defaultValue={isCompany ? "empresa" : "pessoais"} className="w-full">
-               <TabsList className="grid grid-cols-2 sm:grid-cols-5 h-auto">
+               <TabsList className={`grid grid-cols-2 h-auto ${isCompany ? "sm:grid-cols-6" : "sm:grid-cols-5"}`}>
                  {isCompany ? (
-                   <TabsTrigger value="empresa" className="gap-1"><Building2 className="h-4 w-4" />Empresa</TabsTrigger>
+                    <>
+                      <TabsTrigger value="empresa" className="gap-1"><Building2 className="h-4 w-4" />Empresa</TabsTrigger>
+                      <TabsTrigger value="administrador" className="gap-1"><User className="h-4 w-4" />Administrador</TabsTrigger>
+                    </>
                  ) : (
                    <TabsTrigger value="pessoais" className="gap-1"><User className="h-4 w-4" />Pessoais</TabsTrigger>
                  )}
@@ -217,8 +221,42 @@ function PerfilPage() {
                     <Field label="CNAE">
                       <Input value={form.cnae} onChange={(e) => setForm({ ...form, cnae: e.target.value })} required />
                     </Field>
-                    <Field label="Nome do responsável" className="sm:col-span-2">
+                  </CardContent>
+                </Card>
+              </TabsContent>}
+
+              {isCompany && <TabsContent value="administrador" className="mt-6">
+                <Card>
+                  <CardHeader><CardTitle>Dados do Administrador</CardTitle></CardHeader>
+                  <CardContent className="grid gap-4 sm:grid-cols-2">
+                    <Field label="Nome completo" className="sm:col-span-2">
                       <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+                    </Field>
+                    <Field label="CPF">
+                      <Input
+                        value={form.administrator_cpf}
+                        onChange={(e) => setForm({ ...form, administrator_cpf: maskCPF(e.target.value) })}
+                        placeholder="000.000.000-00"
+                        inputMode="numeric"
+                        required
+                      />
+                    </Field>
+                    <Field label="RG">
+                      <Input value={form.rg} onChange={(e) => setForm({ ...form, rg: e.target.value })} placeholder="00.000.000-0" />
+                    </Field>
+                    <Field label="Data de nascimento">
+                      <Input type="date" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} />
+                    </Field>
+                    <Field label="Estado civil">
+                      <Select value={form.marital_status} onValueChange={(v) => setForm({ ...form, marital_status: v })}>
+                        <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                        <SelectContent>
+                          {MARITAL.map((m) => <SelectItem key={m.v} value={m.v}>{m.l}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                    <Field label="Profissão" className="sm:col-span-2">
+                      <Input value={form.profession} onChange={(e) => setForm({ ...form, profession: e.target.value })} />
                     </Field>
                   </CardContent>
                 </Card>
