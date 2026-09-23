@@ -522,7 +522,7 @@ function EmptyState({ onEdit, nome }: { onEdit: () => void; nome?: string }) {
         Olá, {nome || "cliente"}!
       </h1>
       <p className="text-muted-foreground mt-2">
-        Nenhuma carta vinculada ao seu CPF ainda. Complete seu cadastro para agilizar o atendimento.
+        Nenhuma carta vinculada ao seu {profile?.person_type === "cnpj" ? "CNPJ" : "CPF"} ainda. Complete seu cadastro para agilizar o atendimento.
       </p>
       <div className="mt-6 flex justify-center gap-3">
         <Button onClick={onEdit} className="rounded-full bg-[#176F62] hover:bg-[#125c52]">

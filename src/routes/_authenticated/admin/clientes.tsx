@@ -30,6 +30,10 @@ export const Route = createFileRoute("/_authenticated/admin/clientes")({
     meta: [
       { title: "Clientes — BBC Consórcios" },
       { name: "description", content: "Gerenciamento de clientes da BBC Consórcios." },
+      { property: "og:title", content: "Clientes — BBC Consórcios" },
+      { property: "og:description", content: "Gerenciamento de clientes pessoa física e jurídica da BBC Consórcios." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: ClientsPage,

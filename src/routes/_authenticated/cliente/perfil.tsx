@@ -25,6 +25,11 @@ export const Route = createFileRoute("/_authenticated/cliente/perfil")({
   head: () => ({
     meta: [
       { title: "Meus Dados — BBC Consórcios" },
+      { name: "description", content: "Dados pessoais ou empresariais do cliente BBC Consórcios." },
+      { property: "og:title", content: "Meus Dados — BBC Consórcios" },
+      { property: "og:description", content: "Consulte e atualize seus dados na BBC Consórcios." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),
