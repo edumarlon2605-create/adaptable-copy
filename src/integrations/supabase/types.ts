@@ -297,10 +297,13 @@ export type Database = {
           birth_date: string | null
           cep: string | null
           city: string | null
+          cnae: string | null
           cnh_doc_path: string | null
+          cnpj: string | null
           complement: string | null
           consultor_id: string | null
           consultor_user_id: string | null
+          corporate_name: string | null
           country: string | null
           cpf: string | null
           created_at: string
@@ -312,6 +315,7 @@ export type Database = {
           neighborhood: string | null
           notes: string | null
           number: string | null
+          person_type: string
           phone: string | null
           profession: string | null
           rg: string | null
@@ -329,10 +333,13 @@ export type Database = {
           birth_date?: string | null
           cep?: string | null
           city?: string | null
+          cnae?: string | null
           cnh_doc_path?: string | null
+          cnpj?: string | null
           complement?: string | null
           consultor_id?: string | null
           consultor_user_id?: string | null
+          corporate_name?: string | null
           country?: string | null
           cpf?: string | null
           created_at?: string
@@ -344,6 +351,7 @@ export type Database = {
           neighborhood?: string | null
           notes?: string | null
           number?: string | null
+          person_type?: string
           phone?: string | null
           profession?: string | null
           rg?: string | null
@@ -361,10 +369,13 @@ export type Database = {
           birth_date?: string | null
           cep?: string | null
           city?: string | null
+          cnae?: string | null
           cnh_doc_path?: string | null
+          cnpj?: string | null
           complement?: string | null
           consultor_id?: string | null
           consultor_user_id?: string | null
+          corporate_name?: string | null
           country?: string | null
           cpf?: string | null
           created_at?: string
@@ -376,6 +387,7 @@ export type Database = {
           neighborhood?: string | null
           notes?: string | null
           number?: string | null
+          person_type?: string
           phone?: string | null
           profession?: string | null
           rg?: string | null

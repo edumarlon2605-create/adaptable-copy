@@ -8,6 +8,13 @@
       "when": 1788541648664,
       "tag": "0000_bbc_full_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790180309740,
+      "tag": "0001_add_company_fields_to_profiles",
+      "breakpoints": true
     }
   ]
 }
