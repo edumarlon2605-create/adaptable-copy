@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { paymentRecipientSchema } from "@/lib/payment-recipient";
 
 type AppRole = "admin" | "consultor" | "cliente";
 
@@ -790,8 +791,12 @@ export const Route = createFileRoute("/api/bbc")({
 
             case "requestTotalPayment": {
               requireRole("admin", "consultor");
-              const { carta_id } = data;
+              const carta_id = String(data.carta_id ?? "");
               if (!carta_id) return jsonError("Carta não informada.");
+              const recipientResult = paymentRecipientSchema.safeParse(data);
+              if (!recipientResult.success) return jsonError(recipientResult.error.issues[0]?.message ?? "Dados do recebedor inválidos.");
+              const recipient = recipientResult.data;
+              if (!isValidCpf(recipient.recipient_document) && !isValidCnpj(recipient.recipient_document)) return jsonError("CPF ou CNPJ do recebedor inválido.");
               const { data: carta } = await supabaseAdmin
                 .from("cartas")
                 .select("id,valor_bem,grupo,cota,cliente:profiles!cartas_cliente_id_fkey(consultor_user_id)")
@@ -810,7 +815,14 @@ export const Route = createFileRoute("/api/bbc")({
               const now = new Date().toISOString();
               const { data: requestRow, error } = await supabaseAdmin
                 .from("payment_requests")
-                .insert({ carta_id, amount: carta.valor_bem, status: "pendente", requested_by: userId, requested_at: now })
+                .insert({
+                  carta_id,
+                  amount: carta.valor_bem,
+                  status: "pendente",
+                  requested_by: userId,
+                  requested_at: now,
+                  ...recipient,
+                })
                 .select("*")
                 .single();
               if (error) {
@@ -1006,7 +1018,7 @@ export const Route = createFileRoute("/api/bbc")({
               const { parcelas, resumo } = await buildCartaDashboard(supabaseAdmin, id, carta);
               const { data: paymentRequests } = await supabaseAdmin
                 .from("payment_requests")
-                .select("id,amount,status,requested_at,resolved_at")
+                .select("id,amount,status,requested_at,resolved_at,recipient_name,recipient_document,bank_name,bank_agency,bank_account,bank_account_type,bank_account_holder")
                 .eq("carta_id", id)
                 .order("requested_at", { ascending: false });
               return Response.json({ carta, parcelas, resumo, payment_requests: paymentRequests ?? [] });

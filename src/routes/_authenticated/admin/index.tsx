@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { AdminLayout } from "@/components/admin-layout";
 import { useAuth } from "@/lib/auth-context";
 import { getDashboardStats } from "@/lib/admin.functions";
@@ -8,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { requestTotalPayment } from "@/lib/cartas.functions";
 import { toast } from "sonner";
 import { mapError } from "@/lib/error-messages";
+import { PaymentRecipientDialog, type PaymentRecipientInput } from "@/components/payment-recipient-dialog";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
@@ -26,6 +28,7 @@ export const Route = createFileRoute("/_authenticated/admin/")({
 
 function DashboardPage() {
   const qc = useQueryClient();
+  const [selectedCarta, setSelectedCarta] = useState<any | null>(null);
   const { role } = useAuth();
   const isAdmin = role === "admin";
   const fetchStats = getDashboardStats;
@@ -45,9 +48,13 @@ function DashboardPage() {
     cartas: [] as any[],
   };
   const requestPayment = useMutation({
-    mutationFn: (cartaId: string) => requestTotalPayment({ data: { carta_id: cartaId } }),
+    mutationFn: (input: PaymentRecipientInput) => {
+      if (!selectedCarta?.id) throw new Error("Carta não informada.");
+      return requestTotalPayment({ data: { carta_id: selectedCarta.id, ...input } });
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin", "dashboard"] });
+      setSelectedCarta(null);
       toast.success("Solicitação de pagamento total enviada.");
     },
     onError: (error) => toast.error(mapError(error)),
@@ -91,7 +98,7 @@ function DashboardPage() {
                   <Button
                     size="sm"
                     disabled={Boolean(carta.pending_request) || requestPayment.isPending}
-                    onClick={() => requestPayment.mutate(carta.id)}
+                    onClick={() => setSelectedCarta(carta)}
                   >
                     {carta.pending_request ? "Pagamento solicitado" : "Solicitar pagamento total"}
                   </Button>
@@ -100,6 +107,14 @@ function DashboardPage() {
             </div>
           )}
         </div>
+
+        <PaymentRecipientDialog
+          open={Boolean(selectedCarta)}
+          onOpenChange={(open) => !open && setSelectedCarta(null)}
+          amount={new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(selectedCarta?.valor_bem ?? 0))}
+          submitting={requestPayment.isPending}
+          onSubmit={(input) => requestPayment.mutate(input)}
+        />
 
         <div className="rounded-2xl border border-border bg-card p-6">
           <h2 className="font-semibold text-lg mb-4">Cadastros recentes</h2>

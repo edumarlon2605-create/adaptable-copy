@@ -293,9 +293,16 @@ export type Database = {
       payment_requests: {
         Row: {
           amount: number
+          bank_account: string | null
+          bank_account_holder: string | null
+          bank_account_type: string | null
+          bank_agency: string | null
+          bank_name: string | null
           carta_id: string
           created_at: string
           id: string
+          recipient_document: string | null
+          recipient_name: string | null
           requested_at: string
           requested_by: string
           resolved_at: string | null
@@ -305,9 +312,16 @@ export type Database = {
         }
         Insert: {
           amount: number
+          bank_account?: string | null
+          bank_account_holder?: string | null
+          bank_account_type?: string | null
+          bank_agency?: string | null
+          bank_name?: string | null
           carta_id: string
           created_at?: string
           id?: string
+          recipient_document?: string | null
+          recipient_name?: string | null
           requested_at?: string
           requested_by: string
           resolved_at?: string | null
@@ -317,9 +331,16 @@ export type Database = {
         }
         Update: {
           amount?: number
+          bank_account?: string | null
+          bank_account_holder?: string | null
+          bank_account_type?: string | null
+          bank_agency?: string | null
+          bank_name?: string | null
           carta_id?: string
           created_at?: string
           id?: string
+          recipient_document?: string | null
+          recipient_name?: string | null
           requested_at?: string
           requested_by?: string
           resolved_at?: string | null
