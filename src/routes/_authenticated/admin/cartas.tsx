@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  CreditCard, Plus, Search, Pencil, Trash2, ListChecks, FileText, Settings, History,
+  CreditCard, Plus, Search, Pencil, Trash2, ListChecks, FileText, Settings, History, Send,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -30,6 +30,7 @@ import {
   listModelos, saveModelo, deleteModelo,
   getConfig, setConfig, listPaymentHistory,
   markAllParcelasPagas,
+  requestTotalPayment, resolveTotalPaymentRequest,
   PRESET_PRAZOS,
 } from "@/lib/cartas.functions";
 import { listClients } from "@/lib/admin.functions";
@@ -40,6 +41,10 @@ export const Route = createFileRoute("/_authenticated/admin/cartas")({
     meta: [
       { title: "Cartas — BBC Consórcios" },
       { name: "description", content: "Gestão automática de cartas de crédito." },
+      { property: "og:title", content: "Cartas — BBC Consórcios" },
+      { property: "og:description", content: "Gestão automática de cartas de crédito." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: CartasPage,
@@ -536,13 +541,19 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
 
   const q = useQuery({
     queryKey: ["carta", cartaId],
-    queryFn: () => getFn({ data: { id: cartaId! } }),
+    queryFn: () => {
+      if (!cartaId) throw new Error("Carta não informada.");
+      return getFn({ data: { id: cartaId } });
+    },
     enabled: !!cartaId,
     refetchOnWindowFocus: true,
   });
   const hist = useQuery({
     queryKey: ["payment-history", cartaId],
-    queryFn: () => histFn({ data: { carta_id: cartaId! } }),
+    queryFn: () => {
+      if (!cartaId) throw new Error("Carta não informada.");
+      return histFn({ data: { carta_id: cartaId } });
+    },
     enabled: !!cartaId,
     refetchOnWindowFocus: true,
   });
@@ -551,6 +562,7 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
     qc.invalidateQueries({ queryKey: ["carta", cartaId] });
     qc.invalidateQueries({ queryKey: ["payment-history", cartaId] });
     qc.invalidateQueries({ queryKey: ["cartas"] });
+    qc.invalidateQueries({ queryKey: ["admin", "dashboard"] });
   }
 
   const toggle = useMutation({
@@ -563,7 +575,10 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
   });
 
   const markAll = useMutation({
-    mutationFn: () => markAllFn({ data: { carta_id: cartaId! } }),
+    mutationFn: () => {
+      if (!cartaId) throw new Error("Carta não informada.");
+      return markAllFn({ data: { carta_id: cartaId } });
+    },
     onSuccess: (r: any) => {
       invalidateAll();
       setConfirmAll(false);
@@ -572,9 +587,33 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
     onError: (e) => toast.error(mapError(e)),
   });
 
+  const requestPayment = useMutation({
+    mutationFn: () => {
+      if (!cartaId) throw new Error("Carta não informada.");
+      return requestTotalPayment({ data: { carta_id: cartaId } });
+    },
+    onSuccess: () => {
+      invalidateAll();
+      toast.success("Solicitação de pagamento total enviada.");
+    },
+    onError: (e) => toast.error(mapError(e)),
+  });
+
+  const resolveRequest = useMutation({
+    mutationFn: (input: { request_id: string; resolution: "confirmado" | "cancelado" }) =>
+      resolveTotalPaymentRequest({ data: input }),
+    onSuccess: (_r, input) => {
+      invalidateAll();
+      toast.success(input.resolution === "confirmado" ? "Pagamento confirmado." : "Solicitação cancelada.");
+    },
+    onError: (e) => toast.error(mapError(e)),
+  });
+
   const carta: any = q.data?.carta;
   const dash: any = q.data?.dashboard;
   const parcelas: any[] = q.data?.parcelas ?? [];
+  const paymentRequests: any[] = q.data?.payment_requests ?? [];
+  const pendingRequest = paymentRequests.find((request) => request.status === "pendente");
 
   return (
     <Dialog open={!!cartaId} onOpenChange={(o) => !o && onClose()}>
@@ -598,6 +637,26 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
             </TabsList>
 
             <TabsContent value="dashboard" className="mt-4 space-y-4">
+              <div className="flex flex-col gap-3 rounded-xl border border-border bg-muted/30 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <div className="text-sm font-semibold">Pagamento total</div>
+                  <div className="text-xs text-muted-foreground">
+                    {pendingRequest
+                      ? `${fmtBRL(Number(pendingRequest.amount))} solicitado em ${fmtDT(pendingRequest.requested_at)}`
+                      : `Solicitar o Valor do Bem: ${fmtBRL(carta.valor_bem)}`}
+                  </div>
+                </div>
+                {pendingRequest ? (
+                  <div className="flex flex-wrap gap-2">
+                    <Button size="sm" disabled={resolveRequest.isPending} onClick={() => resolveRequest.mutate({ request_id: pendingRequest.id, resolution: "confirmado" })}>Confirmar pagamento</Button>
+                    <Button size="sm" variant="outline" disabled={resolveRequest.isPending} onClick={() => resolveRequest.mutate({ request_id: pendingRequest.id, resolution: "cancelado" })}>Cancelar solicitação</Button>
+                  </div>
+                ) : (
+                  <Button className="gap-2" disabled={requestPayment.isPending} onClick={() => requestPayment.mutate()}>
+                    <Send className="h-4 w-4" /> Solicitar pagamento total
+                  </Button>
+                )}
+              </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <Info label="Valor do bem" value={fmtBRL(carta.valor_bem)} />
                 <Info label="% Administrativo" value={`${carta.percentual_administrativo}%`} />
@@ -734,6 +793,9 @@ function eventLabel(t: string) {
     case "carta_atualizada": return "Carta atualizada / cronograma reprocessado";
     case "pagamento_registrado": return "Pagamento registrado";
     case "pagamento_estornado": return "Pagamento estornado";
+    case "pagamento_total_solicitado": return "Pagamento total solicitado";
+    case "pagamento_total_confirmado": return "Pagamento total confirmado";
+    case "pagamento_total_cancelado": return "Solicitação de pagamento total cancelada";
     default: return t;
   }
 }

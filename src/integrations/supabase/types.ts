@@ -290,6 +290,53 @@ export type Database = {
           },
         ]
       }
+      payment_requests: {
+        Row: {
+          amount: number
+          carta_id: string
+          created_at: string
+          id: string
+          requested_at: string
+          requested_by: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          carta_id: string
+          created_at?: string
+          id?: string
+          requested_at?: string
+          requested_by: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          carta_id?: string
+          created_at?: string
+          id?: string
+          requested_at?: string
+          requested_by?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_requests_carta_id_fkey"
+            columns: ["carta_id"]
+            isOneToOne: false
+            referencedRelation: "cartas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           address: string | null

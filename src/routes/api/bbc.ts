@@ -571,8 +571,16 @@ export const Route = createFileRoute("/api/bbc")({
                   .eq("role", "consultor");
                 consultoresCount = count ?? 0;
               }
-              const { data: cartasRows } = await supabaseAdmin.from("cartas").select("situacao");
+              const { data: cartasRows } = await supabaseAdmin
+                .from("cartas")
+                .select("id,grupo,cota,valor_bem,situacao,cliente:profiles!cartas_cliente_id_fkey(name,consultor_user_id)")
+                .order("updated_at", { ascending: false });
               const cartasList = cartasRows ?? [];
+              const cartaIds = cartasList.map((c: any) => c.id);
+              const { data: pendingRequests } = cartaIds.length
+                ? await supabaseAdmin.from("payment_requests").select("id,carta_id,amount,requested_at").in("carta_id", cartaIds).eq("status", "pendente")
+                : { data: [] };
+              const pendingByCarta = new Map((pendingRequests ?? []).map((request: any) => [request.carta_id, request]));
               const cartasTotal = cartasList.length;
               const disponiveisCount = cartasList.filter((c: any) => c.situacao === "disponivel").length;
               const vendidasCount = cartasList.filter(
@@ -601,6 +609,10 @@ export const Route = createFileRoute("/api/bbc")({
                 cartasTotal,
                 cartasDisponiveis: disponiveisCount ?? 0,
                 cartasVendidas: vendidasCount ?? 0,
+                cartas: cartasList
+                  .filter((c: any) => role === "admin" || c.cliente?.consultor_user_id === userId)
+                  .map((c: any) => ({ ...c, pending_request: pendingByCarta.get(c.id) ?? null }))
+                  .slice(0, 8),
                 recentes,
               });
             }
@@ -768,7 +780,89 @@ export const Route = createFileRoute("/api/bbc")({
               if (error || !carta) return jsonError("Carta não encontrada.", 404);
               if (role === "consultor" && carta.cliente?.consultor_user_id !== userId) return jsonError("Acesso negado.", 403);
               const { parcelas, dashboard } = await buildCartaDashboard(supabaseAdmin, id, carta);
-              return Response.json({ carta, parcelas, dashboard });
+              const { data: paymentRequests } = await supabaseAdmin
+                .from("payment_requests")
+                .select("*")
+                .eq("carta_id", id)
+                .order("requested_at", { ascending: false });
+              return Response.json({ carta, parcelas, dashboard, payment_requests: paymentRequests ?? [] });
+            }
+
+            case "requestTotalPayment": {
+              requireRole("admin", "consultor");
+              const { carta_id } = data;
+              if (!carta_id) return jsonError("Carta não informada.");
+              const { data: carta } = await supabaseAdmin
+                .from("cartas")
+                .select("id,valor_bem,grupo,cota,cliente:profiles!cartas_cliente_id_fkey(consultor_user_id)")
+                .eq("id", carta_id)
+                .maybeSingle();
+              if (!carta) return jsonError("Carta não encontrada.", 404);
+              if (role === "consultor" && carta.cliente?.consultor_user_id !== userId) return jsonError("Acesso negado.", 403);
+              if (!carta.valor_bem || Number(carta.valor_bem) <= 0) return jsonError("A carta não possui Valor do Bem válido.");
+              const { data: pending } = await supabaseAdmin
+                .from("payment_requests")
+                .select("id")
+                .eq("carta_id", carta_id)
+                .eq("status", "pendente")
+                .maybeSingle();
+              if (pending) return jsonError("Já existe uma solicitação de pagamento pendente para esta carta.", 409);
+              const now = new Date().toISOString();
+              const { data: requestRow, error } = await supabaseAdmin
+                .from("payment_requests")
+                .insert({ carta_id, amount: carta.valor_bem, status: "pendente", requested_by: userId, requested_at: now })
+                .select("*")
+                .single();
+              if (error) {
+                if (error.code === "23505") return jsonError("Já existe uma solicitação de pagamento pendente para esta carta.", 409);
+                return jsonError(error.message);
+              }
+              const { error: historyError } = await supabaseAdmin.from("payment_history").insert({
+                carta_id,
+                event_type: "pagamento_total_solicitado",
+                amount: carta.valor_bem,
+                status: "pendente",
+                payment_date: now,
+                notes: "Pagamento total solicitado pelo Valor do Bem.",
+                created_by: userId,
+                created_at: now,
+              });
+              if (historyError) return jsonError(historyError.message);
+              return Response.json({ ok: true, request: requestRow });
+            }
+
+            case "resolveTotalPaymentRequest": {
+              requireRole("admin", "consultor");
+              const { request_id, resolution } = data;
+              if (!request_id || !["confirmado", "cancelado"].includes(resolution)) return jsonError("Dados inválidos.");
+              const { data: requestRow } = await supabaseAdmin
+                .from("payment_requests")
+                .select("*,carta:cartas!payment_requests_carta_id_fkey(cliente:profiles!cartas_cliente_id_fkey(consultor_user_id))")
+                .eq("id", request_id)
+                .maybeSingle();
+              if (!requestRow) return jsonError("Solicitação não encontrada.", 404);
+              if (role === "consultor" && requestRow.carta?.cliente?.consultor_user_id !== userId) return jsonError("Acesso negado.", 403);
+              if (requestRow.status !== "pendente") return jsonError("Esta solicitação já foi encerrada.", 409);
+              const now = new Date().toISOString();
+              const { error } = await supabaseAdmin
+                .from("payment_requests")
+                .update({ status: resolution, resolved_by: userId, resolved_at: now, updated_at: now })
+                .eq("id", request_id)
+                .eq("status", "pendente");
+              if (error) return jsonError(error.message);
+              const confirmed = resolution === "confirmado";
+              const { error: historyError } = await supabaseAdmin.from("payment_history").insert({
+                carta_id: requestRow.carta_id,
+                event_type: confirmed ? "pagamento_total_confirmado" : "pagamento_total_cancelado",
+                amount: requestRow.amount,
+                status: resolution,
+                payment_date: now,
+                notes: confirmed ? "Pagamento total confirmado." : "Solicitação de pagamento total cancelada.",
+                created_by: userId,
+                created_at: now,
+              });
+              if (historyError) return jsonError(historyError.message);
+              return Response.json({ ok: true });
             }
 
             case "deleteCarta": {
@@ -910,7 +1004,12 @@ export const Route = createFileRoute("/api/bbc")({
               if (error || !carta) return jsonError("Carta não encontrada.", 404);
               if (!profile || carta.cliente_id !== profile.id) return jsonError("Acesso negado.", 403);
               const { parcelas, resumo } = await buildCartaDashboard(supabaseAdmin, id, carta);
-              return Response.json({ carta, parcelas, resumo });
+              const { data: paymentRequests } = await supabaseAdmin
+                .from("payment_requests")
+                .select("id,amount,status,requested_at,resolved_at")
+                .eq("carta_id", id)
+                .order("requested_at", { ascending: false });
+              return Response.json({ carta, parcelas, resumo, payment_requests: paymentRequests ?? [] });
             }
 
             case "getMyProfile": {
