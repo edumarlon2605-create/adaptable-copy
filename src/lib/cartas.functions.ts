@@ -68,6 +68,8 @@ export const deleteCarta = admin("deleteCarta");
 export const toggleParcelaPaga = admin("toggleParcelaPaga");
 export const listPaymentHistory = admin("listPaymentHistory");
 export const markAllParcelasPagas = admin("markAllParcelasPagas");
+export const requestTotalPayment = admin("requestTotalPayment");
+export const resolveTotalPaymentRequest = admin("resolveTotalPaymentRequest");
 
 // Área do cliente
 export const listMinhasCartas = cliente("listMinhasCartas");

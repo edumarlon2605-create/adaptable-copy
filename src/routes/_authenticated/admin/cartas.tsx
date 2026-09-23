@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  CreditCard, Plus, Search, Pencil, Trash2, ListChecks, FileText, Settings, History,
+  CreditCard, Plus, Search, Pencil, Trash2, ListChecks, FileText, Settings, History, Send,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -30,6 +30,7 @@ import {
   listModelos, saveModelo, deleteModelo,
   getConfig, setConfig, listPaymentHistory,
   markAllParcelasPagas,
+  requestTotalPayment, resolveTotalPaymentRequest,
   PRESET_PRAZOS,
 } from "@/lib/cartas.functions";
 import { listClients } from "@/lib/admin.functions";
@@ -533,6 +534,7 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
   const histFn = listPaymentHistory;
   const markAllFn = markAllParcelasPagas;
   const [confirmAll, setConfirmAll] = useState(false);
+  const [confirmRequest, setConfirmRequest] = useState(false);
 
   const q = useQuery({
     queryKey: ["carta", cartaId],
@@ -572,9 +574,31 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
     onError: (e) => toast.error(mapError(e)),
   });
 
+  const requestPayment = useMutation({
+    mutationFn: () => requestTotalPayment({ data: { carta_id: cartaId! } }),
+    onSuccess: () => {
+      invalidateAll();
+      setConfirmRequest(false);
+      toast.success("Solicitação de pagamento total enviada.");
+    },
+    onError: (e) => toast.error(mapError(e)),
+  });
+
+  const resolveRequest = useMutation({
+    mutationFn: (input: { request_id: string; resolution: "confirmado" | "cancelado" }) =>
+      resolveTotalPaymentRequest({ data: input }),
+    onSuccess: (_r, input) => {
+      invalidateAll();
+      toast.success(input.resolution === "confirmado" ? "Pagamento confirmado." : "Solicitação cancelada.");
+    },
+    onError: (e) => toast.error(mapError(e)),
+  });
+
   const carta: any = q.data?.carta;
   const dash: any = q.data?.dashboard;
   const parcelas: any[] = q.data?.parcelas ?? [];
+  const paymentRequests: any[] = q.data?.payment_requests ?? [];
+  const pendingRequest = paymentRequests.find((request) => request.status === "pendente");
 
   return (
     <Dialog open={!!cartaId} onOpenChange={(o) => !o && onClose()}>
@@ -598,6 +622,26 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
             </TabsList>
 
             <TabsContent value="dashboard" className="mt-4 space-y-4">
+              <div className="flex flex-col gap-3 rounded-xl border border-border bg-muted/30 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <div className="text-sm font-semibold">Pagamento total</div>
+                  <div className="text-xs text-muted-foreground">
+                    {pendingRequest
+                      ? `${fmtBRL(Number(pendingRequest.amount))} solicitado em ${fmtDT(pendingRequest.requested_at)}`
+                      : `Solicitar o Valor do Bem: ${fmtBRL(carta.valor_bem)}`}
+                  </div>
+                </div>
+                {pendingRequest ? (
+                  <div className="flex flex-wrap gap-2">
+                    <Button size="sm" disabled={resolveRequest.isPending} onClick={() => resolveRequest.mutate({ request_id: pendingRequest.id, resolution: "confirmado" })}>Confirmar pagamento</Button>
+                    <Button size="sm" variant="outline" disabled={resolveRequest.isPending} onClick={() => resolveRequest.mutate({ request_id: pendingRequest.id, resolution: "cancelado" })}>Cancelar solicitação</Button>
+                  </div>
+                ) : (
+                  <Button className="gap-2" disabled={requestPayment.isPending} onClick={() => setConfirmRequest(true)}>
+                    <Send className="h-4 w-4" /> Solicitar pagamento total
+                  </Button>
+                )}
+              </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <Info label="Valor do bem" value={fmtBRL(carta.valor_bem)} />
                 <Info label="% Administrativo" value={`${carta.percentual_administrativo}%`} />
@@ -688,6 +732,22 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
+              <AlertDialog open={confirmRequest} onOpenChange={setConfirmRequest}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Solicitar pagamento total?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Será enviada uma solicitação de {fmtBRL(carta?.valor_bem)}, correspondente ao Valor do Bem. As parcelas não serão alteradas.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction disabled={requestPayment.isPending} onClick={() => requestPayment.mutate()}>
+                      {requestPayment.isPending ? "Enviando..." : "Enviar solicitação"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </TabsContent>
 
 
@@ -734,6 +794,9 @@ function eventLabel(t: string) {
     case "carta_atualizada": return "Carta atualizada / cronograma reprocessado";
     case "pagamento_registrado": return "Pagamento registrado";
     case "pagamento_estornado": return "Pagamento estornado";
+    case "pagamento_total_solicitado": return "Pagamento total solicitado";
+    case "pagamento_total_confirmado": return "Pagamento total confirmado";
+    case "pagamento_total_cancelado": return "Solicitação de pagamento total cancelada";
     default: return t;
   }
 }
