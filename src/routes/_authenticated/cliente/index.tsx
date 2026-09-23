@@ -156,7 +156,11 @@ function ClienteHome() {
               <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#176F62] border-t-transparent" />
             </div>
           ) : list.length === 0 ? (
-            <EmptyState onEdit={() => router.navigate({ to: "/cliente/perfil" })} nome={profile?.name} />
+            <EmptyState
+              onEdit={() => router.navigate({ to: "/cliente/perfil" })}
+              nome={profile?.name}
+              personType={profile?.person_type}
+            />
           ) : (
             <>
               {list.length > 1 && (
@@ -515,14 +519,14 @@ function MiniDonut({ pct }: { pct: number }) {
   );
 }
 
-function EmptyState({ onEdit, nome }: { onEdit: () => void; nome?: string }) {
+function EmptyState({ onEdit, nome, personType }: { onEdit: () => void; nome?: string; personType?: string }) {
   return (
     <div className="mx-auto max-w-2xl bg-white rounded-md shadow-sm p-8 text-center">
       <h1 className="font-display text-2xl font-bold text-[#176F62]">
         Olá, {nome || "cliente"}!
       </h1>
       <p className="text-muted-foreground mt-2">
-        Nenhuma carta vinculada ao seu {profile?.person_type === "cnpj" ? "CNPJ" : "CPF"} ainda. Complete seu cadastro para agilizar o atendimento.
+        Nenhuma carta vinculada ao seu {personType === "cnpj" ? "CNPJ" : "CPF"} ainda. Complete seu cadastro para agilizar o atendimento.
       </p>
       <div className="mt-6 flex justify-center gap-3">
         <Button onClick={onEdit} className="rounded-full bg-[#176F62] hover:bg-[#125c52]">
