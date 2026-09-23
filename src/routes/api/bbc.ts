@@ -790,8 +790,22 @@ export const Route = createFileRoute("/api/bbc")({
 
             case "requestTotalPayment": {
               requireRole("admin", "consultor");
-              const { carta_id } = data;
+              const carta_id = String(data.carta_id ?? "");
+              const recipientName = String(data.recipient_name ?? "").trim();
+              const recipientDocument = String(data.recipient_document ?? "").replace(/\D/g, "");
+              const bankName = String(data.bank_name ?? "").trim();
+              const bankAgency = String(data.bank_agency ?? "").trim();
+              const bankAccount = String(data.bank_account ?? "").trim();
+              const bankAccountType = String(data.bank_account_type ?? "");
+              const bankAccountHolder = String(data.bank_account_holder ?? "").trim();
               if (!carta_id) return jsonError("Carta não informada.");
+              if (recipientName.length < 2 || recipientName.length > 150) return jsonError("Nome ou razão social do recebedor inválido.");
+              if (!isValidCpf(recipientDocument) && !isValidCnpj(recipientDocument)) return jsonError("CPF ou CNPJ do recebedor inválido.");
+              if (bankName.length < 2 || bankName.length > 100) return jsonError("Banco inválido.");
+              if (bankAgency.length < 1 || bankAgency.length > 20) return jsonError("Agência inválida.");
+              if (bankAccount.length < 1 || bankAccount.length > 30) return jsonError("Conta inválida.");
+              if (!["corrente", "poupanca", "pagamento"].includes(bankAccountType)) return jsonError("Tipo de conta inválido.");
+              if (bankAccountHolder.length < 2 || bankAccountHolder.length > 150) return jsonError("Titular da conta inválido.");
               const { data: carta } = await supabaseAdmin
                 .from("cartas")
                 .select("id,valor_bem,grupo,cota,cliente:profiles!cartas_cliente_id_fkey(consultor_user_id)")
@@ -810,7 +824,20 @@ export const Route = createFileRoute("/api/bbc")({
               const now = new Date().toISOString();
               const { data: requestRow, error } = await supabaseAdmin
                 .from("payment_requests")
-                .insert({ carta_id, amount: carta.valor_bem, status: "pendente", requested_by: userId, requested_at: now })
+                .insert({
+                  carta_id,
+                  amount: carta.valor_bem,
+                  status: "pendente",
+                  requested_by: userId,
+                  requested_at: now,
+                  recipient_name: recipientName,
+                  recipient_document: recipientDocument,
+                  bank_name: bankName,
+                  bank_agency: bankAgency,
+                  bank_account: bankAccount,
+                  bank_account_type: bankAccountType,
+                  bank_account_holder: bankAccountHolder,
+                })
                 .select("*")
                 .single();
               if (error) {
@@ -1006,7 +1033,7 @@ export const Route = createFileRoute("/api/bbc")({
               const { parcelas, resumo } = await buildCartaDashboard(supabaseAdmin, id, carta);
               const { data: paymentRequests } = await supabaseAdmin
                 .from("payment_requests")
-                .select("id,amount,status,requested_at,resolved_at")
+                .select("id,amount,status,requested_at,resolved_at,recipient_name,recipient_document,bank_name,bank_agency,bank_account,bank_account_type,bank_account_holder")
                 .eq("carta_id", id)
                 .order("requested_at", { ascending: false });
               return Response.json({ carta, parcelas, resumo, payment_requests: paymentRequests ?? [] });

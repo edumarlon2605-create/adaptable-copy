@@ -35,6 +35,7 @@ import {
 } from "@/lib/cartas.functions";
 import { listClients } from "@/lib/admin.functions";
 import { mapError } from "@/lib/error-messages";
+import { PaymentRecipientDialog, type PaymentRecipientInput } from "@/components/payment-recipient-dialog";
 
 export const Route = createFileRoute("/_authenticated/admin/cartas")({
   head: () => ({
@@ -538,6 +539,7 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
   const histFn = listPaymentHistory;
   const markAllFn = markAllParcelasPagas;
   const [confirmAll, setConfirmAll] = useState(false);
+  const [recipientOpen, setRecipientOpen] = useState(false);
 
   const q = useQuery({
     queryKey: ["carta", cartaId],
@@ -588,12 +590,13 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
   });
 
   const requestPayment = useMutation({
-    mutationFn: () => {
+    mutationFn: (input: PaymentRecipientInput) => {
       if (!cartaId) throw new Error("Carta não informada.");
-      return requestTotalPayment({ data: { carta_id: cartaId } });
+      return requestTotalPayment({ data: { carta_id: cartaId, ...input } });
     },
     onSuccess: () => {
       invalidateAll();
+      setRecipientOpen(false);
       toast.success("Solicitação de pagamento total enviada.");
     },
     onError: (e) => toast.error(mapError(e)),
@@ -645,6 +648,17 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
                       ? `${fmtBRL(Number(pendingRequest.amount))} solicitado em ${fmtDT(pendingRequest.requested_at)}`
                       : `Solicitar o Valor do Bem: ${fmtBRL(carta.valor_bem)}`}
                   </div>
+                  {pendingRequest?.recipient_name && (
+                    <div className="mt-3 grid gap-1 text-xs sm:grid-cols-2">
+                      <span><strong>Recebedor:</strong> {pendingRequest.recipient_name}</span>
+                      <span><strong>CPF/CNPJ:</strong> {pendingRequest.recipient_document}</span>
+                      <span><strong>Banco:</strong> {pendingRequest.bank_name}</span>
+                      <span><strong>Agência:</strong> {pendingRequest.bank_agency}</span>
+                      <span><strong>Conta:</strong> {pendingRequest.bank_account}</span>
+                      <span><strong>Tipo:</strong> {pendingRequest.bank_account_type === "poupanca" ? "Poupança" : pendingRequest.bank_account_type === "pagamento" ? "Pagamento" : "Corrente"}</span>
+                      <span className="sm:col-span-2"><strong>Titular:</strong> {pendingRequest.bank_account_holder}</span>
+                    </div>
+                  )}
                 </div>
                 {pendingRequest ? (
                   <div className="flex flex-wrap gap-2">
@@ -652,11 +666,18 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
                     <Button size="sm" variant="outline" disabled={resolveRequest.isPending} onClick={() => resolveRequest.mutate({ request_id: pendingRequest.id, resolution: "cancelado" })}>Cancelar solicitação</Button>
                   </div>
                 ) : (
-                  <Button className="gap-2" disabled={requestPayment.isPending} onClick={() => requestPayment.mutate()}>
+                  <Button className="gap-2" disabled={requestPayment.isPending} onClick={() => setRecipientOpen(true)}>
                     <Send className="h-4 w-4" /> Solicitar pagamento total
                   </Button>
                 )}
               </div>
+              <PaymentRecipientDialog
+                open={recipientOpen}
+                onOpenChange={setRecipientOpen}
+                amount={fmtBRL(carta.valor_bem)}
+                submitting={requestPayment.isPending}
+                onSubmit={(input) => requestPayment.mutate(input)}
+              />
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <Info label="Valor do bem" value={fmtBRL(carta.valor_bem)} />
                 <Info label="% Administrativo" value={`${carta.percentual_administrativo}%`} />
