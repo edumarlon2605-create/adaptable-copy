@@ -616,6 +616,7 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
   const dash: any = q.data?.dashboard;
   const parcelas: any[] = q.data?.parcelas ?? [];
   const paymentRequests: any[] = q.data?.payment_requests ?? [];
+  const latestPaymentRequest = paymentRequests[0] ?? null;
   const pendingRequest = paymentRequests.find((request) => request.status === "pendente");
 
   return (
@@ -648,15 +649,15 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
                       ? `${fmtBRL(Number(pendingRequest.amount))} solicitado em ${fmtDT(pendingRequest.requested_at)}`
                       : `Solicitar o Valor do Bem: ${fmtBRL(carta.valor_bem)}`}
                   </div>
-                  {pendingRequest?.recipient_name && (
+                  {latestPaymentRequest?.recipient_name && (
                     <div className="mt-3 grid gap-1 text-xs sm:grid-cols-2">
-                      <span><strong>Recebedor:</strong> {pendingRequest.recipient_name}</span>
-                      <span><strong>CPF/CNPJ:</strong> {pendingRequest.recipient_document}</span>
-                      <span><strong>Banco:</strong> {pendingRequest.bank_name}</span>
-                      <span><strong>Agência:</strong> {pendingRequest.bank_agency}</span>
-                      <span><strong>Conta:</strong> {pendingRequest.bank_account}</span>
-                      <span><strong>Tipo:</strong> {pendingRequest.bank_account_type === "poupanca" ? "Poupança" : pendingRequest.bank_account_type === "pagamento" ? "Pagamento" : "Corrente"}</span>
-                      <span className="sm:col-span-2"><strong>Titular:</strong> {pendingRequest.bank_account_holder}</span>
+                      <span><strong>Recebedor:</strong> {latestPaymentRequest.recipient_name}</span>
+                      <span><strong>CPF/CNPJ:</strong> {latestPaymentRequest.recipient_document}</span>
+                      <span><strong>Banco:</strong> {latestPaymentRequest.bank_name}</span>
+                      <span><strong>Agência:</strong> {latestPaymentRequest.bank_agency}</span>
+                      <span><strong>Conta:</strong> {latestPaymentRequest.bank_account}</span>
+                      <span><strong>Tipo:</strong> {latestPaymentRequest.bank_account_type === "poupanca" ? "Poupança" : latestPaymentRequest.bank_account_type === "pagamento" ? "Pagamento" : "Corrente"}</span>
+                      <span className="sm:col-span-2"><strong>Titular:</strong> {latestPaymentRequest.bank_account_holder}</span>
                     </div>
                   )}
                 </div>
