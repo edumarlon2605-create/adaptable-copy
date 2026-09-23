@@ -101,6 +101,23 @@ function ClienteHome() {
   const valorPago = Number(resumo?.total_pago ?? 0);
   const paymentRequests: any[] = detail?.payment_requests ?? [];
   const currentPaymentRequest = paymentRequests[0] ?? null;
+  const extratoEntries = useMemo(
+    () => [
+      ...parcelas.map((parcela) => ({
+        kind: "parcela" as const,
+        id: parcela.id,
+        date: parcela.vencimento,
+        parcela,
+      })),
+      ...paymentRequests.map((request) => ({
+        kind: "solicitacao" as const,
+        id: request.id,
+        date: request.requested_at,
+        request,
+      })),
+    ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
+    [parcelas, paymentRequests],
+  );
 
   const nomeUpper = (profile?.name || "cliente").toUpperCase();
 
@@ -350,44 +367,75 @@ function ClienteHome() {
                     </div>
 
                     {extratoOpen && (
-                      parcelas.length === 0 ? (
-                        <p className="mt-4 text-sm text-muted-foreground">Nenhuma parcela registrada.</p>
+                      extratoEntries.length === 0 ? (
+                        <p className="mt-4 text-sm text-muted-foreground">Nenhum lançamento registrado.</p>
                       ) : (
                         <div className="mt-4 overflow-x-auto -mx-2 max-h-80 overflow-y-auto">
                           <table className="w-full text-sm">
                             <thead className="sticky top-0 bg-white">
                               <tr className="text-[11px] uppercase text-muted-foreground border-b">
-                                <th className="text-left py-2 px-2 font-semibold">Nº</th>
-                                <th className="text-left py-2 px-2 font-semibold">Vencimento</th>
+                                <th className="text-left py-2 px-2 font-semibold">Lançamento</th>
+                                <th className="text-left py-2 px-2 font-semibold">Data</th>
                                 <th className="text-right py-2 px-2 font-semibold">Valor</th>
                                 <th className="text-center py-2 px-2 font-semibold">Status</th>
-                                <th className="text-left py-2 px-2 font-semibold">Pago em</th>
+                                <th className="text-left py-2 px-2 font-semibold">Data/hora</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y">
-                              {[...parcelas].sort((a, b) => a.numero - b.numero).map((p) => (
-                                <tr key={p.id}>
-                                  <td className="py-2 px-2 font-semibold">{pad3(p.numero)}</td>
-                                  <td className="py-2 px-2">{fmtDate(p.vencimento)}</td>
-                                  <td className="py-2 px-2 text-right font-semibold">{fmtBRL(p.valor)}</td>
-                                  <td className="py-2 px-2 text-center">
-                                    <span
-                                      className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
-                                        p.status === "pago"
-                                          ? "bg-[#176F62]/10 text-[#176F62]"
-                                          : "bg-[#fff8d6] text-[#8a6a00] border border-[#f2d97a]"
-                                      }`}
-                                    >
-                                      {p.status === "pago" ? "Pago" : "Em aberto"}
-                                    </span>
-                                  </td>
-                                  <td className="py-2 px-2 text-muted-foreground whitespace-nowrap">
-                                    {p.status === "pago" && p.pago_em
-                                      ? new Date(p.pago_em).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" })
-                                      : "—"}
-                                  </td>
-                                </tr>
-                              ))}
+                              {extratoEntries.map((entry) => {
+                                if (entry.kind === "solicitacao") {
+                                  const request = entry.request;
+                                  const statusLabel = request.status === "confirmado"
+                                    ? "Confirmado"
+                                    : request.status === "cancelado" ? "Cancelado" : "Solicitado";
+                                  return (
+                                    <tr key={`request-${entry.id}`} className="bg-[#fff8d6]/60">
+                                      <td className="py-2 px-2 font-semibold whitespace-nowrap">Pagamento total</td>
+                                      <td className="py-2 px-2">{new Date(request.requested_at).toLocaleDateString("pt-BR")}</td>
+                                      <td className="py-2 px-2 text-right font-semibold">{fmtBRL(request.amount)}</td>
+                                      <td className="py-2 px-2 text-center">
+                                        <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                                          request.status === "confirmado"
+                                            ? "bg-[#176F62]/10 text-[#176F62]"
+                                            : request.status === "cancelado"
+                                              ? "bg-destructive/10 text-destructive"
+                                              : "bg-[#fff8d6] text-[#8a6a00] border border-[#f2d97a]"
+                                        }`}>
+                                          {statusLabel}
+                                        </span>
+                                      </td>
+                                      <td className="py-2 px-2 text-muted-foreground whitespace-nowrap">
+                                        {new Date(request.requested_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                                      </td>
+                                    </tr>
+                                  );
+                                }
+
+                                const p = entry.parcela;
+                                return (
+                                  <tr key={entry.id}>
+                                    <td className="py-2 px-2 font-semibold">Parcela {pad3(p.numero)}</td>
+                                    <td className="py-2 px-2">{fmtDate(p.vencimento)}</td>
+                                    <td className="py-2 px-2 text-right font-semibold">{fmtBRL(p.valor)}</td>
+                                    <td className="py-2 px-2 text-center">
+                                      <span
+                                        className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                                          p.status === "pago"
+                                            ? "bg-[#176F62]/10 text-[#176F62]"
+                                            : "bg-[#fff8d6] text-[#8a6a00] border border-[#f2d97a]"
+                                        }`}
+                                      >
+                                        {p.status === "pago" ? "Pago" : "Em aberto"}
+                                      </span>
+                                    </td>
+                                    <td className="py-2 px-2 text-muted-foreground whitespace-nowrap">
+                                      {p.status === "pago" && p.pago_em
+                                        ? new Date(p.pago_em).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" })
+                                        : "—"}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
                             </tbody>
                           </table>
                         </div>
