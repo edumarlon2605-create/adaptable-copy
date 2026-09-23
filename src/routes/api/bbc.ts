@@ -2,6 +2,28 @@ import { createFileRoute } from "@tanstack/react-router";
 
 type AppRole = "admin" | "consultor" | "cliente";
 
+function isValidCpf(value: string) {
+  if (value.length !== 11 || /^(\d)\1{10}$/.test(value)) return false;
+  const digit = (base: string, factor: number) => {
+    const sum = base.split("").reduce((total, current, index) => total + Number(current) * (factor - index), 0);
+    const remainder = (sum * 10) % 11;
+    return remainder === 10 ? 0 : remainder;
+  };
+  return digit(value.slice(0, 9), 10) === Number(value[9]) && digit(value.slice(0, 10), 11) === Number(value[10]);
+}
+
+function isValidCnpj(value: string) {
+  if (value.length !== 14 || /^(\d)\1{13}$/.test(value)) return false;
+  const digit = (base: string, weights: number[]) => {
+    const sum = base.split("").reduce((total, current, index) => total + Number(current) * weights[index], 0);
+    const remainder = sum % 11;
+    return remainder < 2 ? 0 : 11 - remainder;
+  };
+  const first = digit(value.slice(0, 12), [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
+  const second = digit(value.slice(0, 12) + first, [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
+  return value.endsWith(`${first}${second}`);
+}
+
 function jsonError(message: string, status = 400) {
   return Response.json({ error: message }, { status });
 }
@@ -314,12 +336,13 @@ export const Route = createFileRoute("/api/bbc")({
           switch (action) {
             /* ===================== PUBLIC ===================== */
             case "resolveClienteLogin": {
-              const cpf = String(data.cpf ?? "").replace(/\D/g, "");
-              if (cpf.length !== 11) return jsonError("CPF inválido.");
+              const document = String(data.document ?? data.cpf ?? "").replace(/\D/g, "");
+              if (document.length !== 11 && document.length !== 14) return jsonError("CPF/CNPJ inválido.");
+              const column = document.length === 14 ? "cnpj" : "cpf";
               const { data: profile } = await supabaseAdmin
                 .from("profiles")
                 .select("email, user_id")
-                .eq("cpf", cpf)
+                .eq(column, document)
                 .maybeSingle();
               if (!profile) return jsonError("Cliente não encontrado.", 404);
               // O e-mail de login é sempre o da conta de autenticação: o cliente
@@ -429,10 +452,18 @@ export const Route = createFileRoute("/api/bbc")({
 
             case "createClient": {
               requireRole("admin", "consultor");
-              const { name, cpf, phone, whatsapp, password, status } = data;
+              const { name, cpf, cnpj, cnae, corporate_name, person_type, phone, whatsapp, password, status } = data;
+              const isCompany = person_type === "cnpj";
               const cpfDigits = String(cpf ?? "").replace(/\D/g, "");
-              if (!name || cpfDigits.length !== 11 || !password) return jsonError("Dados incompletos.");
-              const email = `${cpfDigits}@clientes.bbc.local`;
+              const cnpjDigits = String(cnpj ?? "").replace(/\D/g, "");
+              if (!name || !password) return jsonError("Dados incompletos.");
+              if (!isCompany && !isValidCpf(cpfDigits)) return jsonError("CPF inválido.");
+              if (isCompany && !isValidCnpj(cnpjDigits)) return jsonError("CNPJ inválido.");
+              if (isCompany && (!String(corporate_name ?? "").trim() || !String(cnae ?? "").trim())) {
+                return jsonError("Informe a razão social e o CNAE.");
+              }
+              const loginDocument = isCompany ? cnpjDigits : cpfDigits;
+              const email = `${loginDocument}@clientes.bbc.local`;
               const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
                 email,
                 password,
@@ -444,7 +475,11 @@ export const Route = createFileRoute("/api/bbc")({
                 user_id: newUserId,
                 email,
                 name,
-                cpf: cpfDigits,
+                person_type: isCompany ? "cnpj" : "cpf",
+                cpf: isCompany ? null : cpfDigits,
+                cnpj: isCompany ? cnpjDigits : null,
+                cnae: isCompany ? String(cnae).trim() : null,
+                corporate_name: isCompany ? String(corporate_name).trim() : null,
                 phone: phone || null,
                 whatsapp: whatsapp || phone || null,
                 status: status || "ativo",
@@ -460,14 +495,21 @@ export const Route = createFileRoute("/api/bbc")({
 
             case "updateClient": {
               requireRole("admin", "consultor");
-              const { id, name, cpf, phone, whatsapp, status, documentos_ok } = data;
+              const { id, name, cpf, cnpj, cnae, corporate_name, person_type, phone, whatsapp, status, documentos_ok } = data;
               if (!id) return jsonError("Cliente não informado.");
               const { data: existing } = await supabaseAdmin.from("profiles").select("*").eq("id", id).maybeSingle();
               if (!existing) return jsonError("Cliente não encontrado.", 404);
               if (role === "consultor" && existing.consultor_user_id !== userId) return jsonError("Acesso negado.", 403);
               const updates: Record<string, any> = {};
+              const nextType = person_type === "cnpj" ? "cnpj" : person_type === "cpf" ? "cpf" : existing.person_type;
+              if (nextType === "cpf" && cpf !== undefined && !isValidCpf(String(cpf).replace(/\D/g, ""))) return jsonError("CPF inválido.");
+              if (nextType === "cnpj" && cnpj !== undefined && !isValidCnpj(String(cnpj).replace(/\D/g, ""))) return jsonError("CNPJ inválido.");
               if (name !== undefined) updates.name = name;
-              if (cpf !== undefined) updates.cpf = String(cpf).replace(/\D/g, "");
+              if (person_type !== undefined) updates.person_type = nextType;
+              if (cpf !== undefined) updates.cpf = cpf ? String(cpf).replace(/\D/g, "") : null;
+              if (cnpj !== undefined) updates.cnpj = cnpj ? String(cnpj).replace(/\D/g, "") : null;
+              if (cnae !== undefined) updates.cnae = cnae || null;
+              if (corporate_name !== undefined) updates.corporate_name = corporate_name || null;
               if (phone !== undefined) updates.phone = phone;
               if (whatsapp !== undefined) updates.whatsapp = whatsapp;
               if (status !== undefined) updates.status = status;
@@ -887,6 +929,7 @@ export const Route = createFileRoute("/api/bbc")({
               requireRole("cliente");
               const allowed = [
                 "name", "rg", "birth_date", "marital_status", "profession",
+                "corporate_name", "cnae",
                 "email", "phone", "whatsapp", "cep", "street", "number",
                 "complement", "neighborhood", "city", "state", "country",
               ];

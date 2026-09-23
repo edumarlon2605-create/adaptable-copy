@@ -22,6 +22,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Trash2, KeyRound, FileCheck2 } from "lucide-react";
 import { isValidCpf, sanitizeCpf } from "@/lib/cpf";
+import { formatCnpj, isValidCnpj, sanitizeCnpj } from "@/lib/cnpj";
 import { mapError } from "@/lib/error-messages";
 
 export const Route = createFileRoute("/_authenticated/admin/clientes")({
@@ -29,6 +30,10 @@ export const Route = createFileRoute("/_authenticated/admin/clientes")({
     meta: [
       { title: "Clientes — BBC Consórcios" },
       { name: "description", content: "Gerenciamento de clientes da BBC Consórcios." },
+      { property: "og:title", content: "Clientes — BBC Consórcios" },
+      { property: "og:description", content: "Gerenciamento de clientes pessoa física e jurídica da BBC Consórcios." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: ClientsPage,
@@ -43,15 +48,22 @@ function ClientsPage() {
 }
 
 type FormState = {
+  person_type: "cpf" | "cnpj";
   name: string;
   cpf: string;
+  cnpj: string;
+  cnae: string;
+  corporate_name: string;
   phone: string;
   password: string;
   status: "ativo" | "inativo" | "pendente";
   documentos_ok: boolean;
 };
 
-const EMPTY_FORM: FormState = { name: "", cpf: "", phone: "", password: "", status: "ativo", documentos_ok: false };
+const EMPTY_FORM: FormState = {
+  person_type: "cpf", name: "", cpf: "", cnpj: "", cnae: "", corporate_name: "",
+  phone: "", password: "", status: "ativo", documentos_ok: false,
+};
 
 function maskCpf(v: string) {
   const d = v.replace(/\D/g, "").slice(0, 11);
@@ -94,7 +106,9 @@ function ClientsManager() {
     const q = search.toLowerCase();
     return (
       c.name?.toLowerCase().includes(q) ||
+      c.corporate_name?.toLowerCase().includes(q) ||
       c.cpf?.replace(/\D/g, "").includes(search.replace(/\D/g, "")) ||
+      c.cnpj?.replace(/\D/g, "").includes(search.replace(/\D/g, "")) ||
       c.phone?.includes(search)
     );
   });
@@ -152,8 +166,12 @@ function ClientsManager() {
   function openEdit(c: any) {
     setEditing(c);
     setForm({
+      person_type: c.person_type === "cnpj" ? "cnpj" : "cpf",
       name: c.name || "",
       cpf: maskCpf(c.cpf || ""),
+      cnpj: formatCnpj(c.cnpj || ""),
+      cnae: c.cnae || "",
+      corporate_name: c.corporate_name || "",
       phone: maskPhone(c.phone || ""),
       password: "",
       status: c.status || "ativo",
@@ -167,10 +185,14 @@ function ClientsManager() {
     e.preventDefault();
     setFormError("");
     const cpfDigits = sanitizeCpf(form.cpf);
+    const cnpjDigits = sanitizeCnpj(form.cnpj);
     const phoneDigits = form.phone.replace(/\D/g, "");
 
-    if (!form.name.trim()) return setFormError("Informe o nome do cliente.");
-    if (!isValidCpf(cpfDigits)) return setFormError("CPF inválido.");
+    if (!form.name.trim()) return setFormError("Informe o nome do cliente ou responsável.");
+    if (form.person_type === "cpf" && !isValidCpf(cpfDigits)) return setFormError("CPF inválido.");
+    if (form.person_type === "cnpj" && !isValidCnpj(cnpjDigits)) return setFormError("CNPJ inválido.");
+    if (form.person_type === "cnpj" && !form.corporate_name.trim()) return setFormError("Informe a razão social.");
+    if (form.person_type === "cnpj" && !form.cnae.trim()) return setFormError("Informe o CNAE.");
     if (phoneDigits.length < 10) return setFormError("Telefone inválido.");
     if (!editing && form.password.length < 6)
       return setFormError("A senha deve ter pelo menos 6 caracteres.");
@@ -178,8 +200,12 @@ function ClientsManager() {
     if (editing) {
       saveMutation.mutate({
         id: editing.id,
+        person_type: form.person_type,
         name: form.name.trim(),
-        cpf: cpfDigits,
+        cpf: form.person_type === "cpf" ? cpfDigits : null,
+        cnpj: form.person_type === "cnpj" ? cnpjDigits : null,
+        cnae: form.person_type === "cnpj" ? form.cnae.trim() : null,
+        corporate_name: form.person_type === "cnpj" ? form.corporate_name.trim() : null,
         phone: phoneDigits,
         whatsapp: phoneDigits,
         status: form.status,
@@ -188,7 +214,11 @@ function ClientsManager() {
     } else {
       saveMutation.mutate({
         name: form.name.trim(),
-        cpf: cpfDigits,
+        person_type: form.person_type,
+        cpf: form.person_type === "cpf" ? cpfDigits : null,
+        cnpj: form.person_type === "cnpj" ? cnpjDigits : null,
+        cnae: form.person_type === "cnpj" ? form.cnae.trim() : null,
+        corporate_name: form.person_type === "cnpj" ? form.corporate_name.trim() : null,
         phone: phoneDigits,
         password: form.password,
         status: form.status,
@@ -202,7 +232,7 @@ function ClientsManager() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="font-display text-3xl font-bold text-foreground">Clientes</h1>
-          <p className="text-muted-foreground">Aprove cadastros com CPF, nome, telefone e senha.</p>
+          <p className="text-muted-foreground">Cadastre pessoas físicas por CPF e empresas por CNPJ.</p>
         </div>
         <Dialog open={open} onOpenChange={(o) => (o ? setOpen(true) : (setOpen(false), setEditing(null)))}>
           <DialogTrigger asChild>
@@ -216,14 +246,49 @@ function ClientsManager() {
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 mt-2">
               <div className="space-y-1.5">
-                <Label>Nome completo</Label>
+                <Label>Tipo de cliente</Label>
+                <Select
+                  value={form.person_type}
+                  onValueChange={(value) => setForm({
+                    ...form,
+                    person_type: value as "cpf" | "cnpj",
+                    cpf: value === "cpf" ? form.cpf : "",
+                    cnpj: value === "cnpj" ? form.cnpj : "",
+                  })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cpf">Pessoa física (CPF)</SelectItem>
+                    <SelectItem value="cnpj">Pessoa jurídica (CNPJ)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>{form.person_type === "cnpj" ? "Nome do responsável" : "Nome completo"}</Label>
                 <Input
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   required
                 />
               </div>
+              {form.person_type === "cnpj" && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5 col-span-2">
+                    <Label>Razão Social</Label>
+                    <Input value={form.corporate_name} onChange={(e) => setForm({ ...form, corporate_name: e.target.value })} required />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>CNPJ</Label>
+                    <Input value={form.cnpj} onChange={(e) => setForm({ ...form, cnpj: formatCnpj(e.target.value) })} placeholder="00.000.000/0000-00" inputMode="numeric" required />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>CNAE</Label>
+                    <Input value={form.cnae} onChange={(e) => setForm({ ...form, cnae: e.target.value })} placeholder="0000-0/00" required />
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-3">
+                {form.person_type === "cpf" && (
                 <div className="space-y-1.5">
                   <Label>CPF</Label>
                   <Input
@@ -234,6 +299,7 @@ function ClientsManager() {
                     required
                   />
                 </div>
+                )}
                 <div className="space-y-1.5">
                   <Label>Telefone</Label>
                   <Input
@@ -299,7 +365,7 @@ function ClientsManager() {
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Buscar por nome, CPF ou telefone..."
+          placeholder="Buscar por nome, CPF, CNPJ ou telefone..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-9 rounded-full"
@@ -311,7 +377,7 @@ function ClientsManager() {
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
-              <TableHead>CPF</TableHead>
+              <TableHead>CPF/CNPJ</TableHead>
               <TableHead>Telefone</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Ações</TableHead>
@@ -335,7 +401,12 @@ function ClientsManager() {
             {filtered.map((c: any) => (
               <TableRow key={c.id}>
                 <TableCell className="font-medium">{c.name}</TableCell>
-                <TableCell>{maskCpf(c.cpf || "")}</TableCell>
+                <TableCell>
+                  <div>{c.person_type === "cnpj" ? formatCnpj(c.cnpj || "") : maskCpf(c.cpf || "")}</div>
+                  {c.person_type === "cnpj" && c.corporate_name && (
+                    <div className="text-xs text-muted-foreground">{c.corporate_name}</div>
+                  )}
+                </TableCell>
                 <TableCell>{maskPhone(c.phone || "")}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1.5 flex-wrap">

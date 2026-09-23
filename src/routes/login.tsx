@@ -14,6 +14,10 @@ export const Route = createFileRoute("/login")({
         name: "description",
         content: "Acesse sua conta de cliente para acompanhar grupo, boletos e assembleias.",
       },
+      { property: "og:title", content: "Área do Cliente — BBC Consórcios" },
+      { property: "og:description", content: "Acesse sua conta com CPF ou CNPJ para acompanhar seu consórcio." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -21,11 +25,11 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
-  const [cpf, setCpf] = useState("");
+  const [document, setDocument] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signInWithCPF } = useClienteAuth();
+  const { signInWithDocument } = useClienteAuth();
   const navigate = useNavigate();
 
   async function handleSubmit(e: React.FormEvent) {
@@ -33,7 +37,7 @@ function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      const result = await signInWithCPF(cpf, password);
+      const result = await signInWithDocument(document, password);
       if (result.error) throw result.error;
       navigate({ to: "/bem-vindo", replace: true });
     } catch (err) {
@@ -66,14 +70,14 @@ function LoginPage() {
           className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4"
         >
           <label className="block">
-            <span className="text-sm font-medium text-foreground">CPF</span>
+            <span className="text-sm font-medium text-foreground">CPF/CNPJ</span>
             <div className="mt-1 flex items-center gap-2 rounded-lg border border-input bg-background px-3 py-2">
               <User className="h-4 w-4 text-muted-foreground" />
               <input
-                value={cpf}
-                onChange={(e) => setCpf(e.target.value)}
+                value={document}
+                onChange={(e) => setDocument(e.target.value)}
                 className="w-full bg-transparent outline-none"
-                placeholder="000.000.000-00"
+                placeholder="Digite seu CPF ou CNPJ"
                 autoComplete="username"
                 required
               />
