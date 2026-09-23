@@ -29,6 +29,13 @@
       "when": 1790182065919,
       "tag": "0003_create_payment_requests",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790182515353,
+      "tag": "0004_add_payment_request_recipient_details",
+      "breakpoints": true
     }
   ]
 }
