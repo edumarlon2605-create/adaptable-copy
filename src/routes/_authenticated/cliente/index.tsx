@@ -38,6 +38,11 @@ export const Route = createFileRoute("/_authenticated/cliente/")({
   head: () => ({
     meta: [
       { title: "Minha Conta — BBC Consórcios" },
+      { name: "description", content: "Acompanhe sua carta e suas solicitações na BBC Consórcios." },
+      { property: "og:title", content: "Minha Conta — BBC Consórcios" },
+      { property: "og:description", content: "Acompanhe sua carta e suas solicitações na BBC Consórcios." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),

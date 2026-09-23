@@ -14,6 +14,10 @@ export const Route = createFileRoute("/_authenticated/admin/")({
     meta: [
       { title: "Dashboard — BBC Consórcios" },
       { name: "description", content: "Dashboard administrativo da BBC Consórcios." },
+      { property: "og:title", content: "Dashboard — BBC Consórcios" },
+      { property: "og:description", content: "Dashboard administrativo da BBC Consórcios." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),

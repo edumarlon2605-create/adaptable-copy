@@ -41,6 +41,10 @@ export const Route = createFileRoute("/_authenticated/admin/cartas")({
     meta: [
       { title: "Cartas — BBC Consórcios" },
       { name: "description", content: "Gestão automática de cartas de crédito." },
+      { property: "og:title", content: "Cartas — BBC Consórcios" },
+      { property: "og:description", content: "Gestão automática de cartas de crédito." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: CartasPage,
@@ -558,6 +562,7 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
     qc.invalidateQueries({ queryKey: ["carta", cartaId] });
     qc.invalidateQueries({ queryKey: ["payment-history", cartaId] });
     qc.invalidateQueries({ queryKey: ["cartas"] });
+    qc.invalidateQueries({ queryKey: ["admin", "dashboard"] });
   }
 
   const toggle = useMutation({
