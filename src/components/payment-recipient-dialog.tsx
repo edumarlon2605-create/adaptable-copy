@@ -17,16 +17,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { paymentRecipientSchema, type PaymentRecipientInput } from "@/lib/payment-recipient";
 
-export type PaymentRecipientInput = {
-  recipient_name: string;
-  recipient_document: string;
-  bank_name: string;
-  bank_agency: string;
-  bank_account: string;
-  bank_account_type: "corrente" | "poupanca" | "pagamento";
-  bank_account_holder: string;
-};
+export type { PaymentRecipientInput } from "@/lib/payment-recipient";
 
 const EMPTY_FORM: PaymentRecipientInput = {
   recipient_name: "",
@@ -66,33 +59,13 @@ export function PaymentRecipientDialog({
   }
 
   function submit() {
-    const document = form.recipient_document.replace(/\D/g, "");
-    const values = [
-      form.recipient_name,
-      document,
-      form.bank_name,
-      form.bank_agency,
-      form.bank_account,
-      form.bank_account_holder,
-    ];
-    if (values.some((value) => !value.trim())) {
-      setError("Preencha todos os dados do recebedor.");
-      return;
-    }
-    if (document.length !== 11 && document.length !== 14) {
-      setError("Informe um CPF ou CNPJ válido.");
+    const parsed = paymentRecipientSchema.safeParse(form);
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? "Confira os dados do recebedor.");
       return;
     }
     setError("");
-    onSubmit({
-      ...form,
-      recipient_name: form.recipient_name.trim(),
-      recipient_document: document,
-      bank_name: form.bank_name.trim(),
-      bank_agency: form.bank_agency.trim(),
-      bank_account: form.bank_account.trim(),
-      bank_account_holder: form.bank_account_holder.trim(),
-    });
+    onSubmit(parsed.data);
   }
 
   return (

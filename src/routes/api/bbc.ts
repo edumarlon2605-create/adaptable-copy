@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { paymentRecipientSchema } from "@/lib/payment-recipient";
 
 type AppRole = "admin" | "consultor" | "cliente";
 
@@ -791,21 +792,11 @@ export const Route = createFileRoute("/api/bbc")({
             case "requestTotalPayment": {
               requireRole("admin", "consultor");
               const carta_id = String(data.carta_id ?? "");
-              const recipientName = String(data.recipient_name ?? "").trim();
-              const recipientDocument = String(data.recipient_document ?? "").replace(/\D/g, "");
-              const bankName = String(data.bank_name ?? "").trim();
-              const bankAgency = String(data.bank_agency ?? "").trim();
-              const bankAccount = String(data.bank_account ?? "").trim();
-              const bankAccountType = String(data.bank_account_type ?? "");
-              const bankAccountHolder = String(data.bank_account_holder ?? "").trim();
               if (!carta_id) return jsonError("Carta não informada.");
-              if (recipientName.length < 2 || recipientName.length > 150) return jsonError("Nome ou razão social do recebedor inválido.");
-              if (!isValidCpf(recipientDocument) && !isValidCnpj(recipientDocument)) return jsonError("CPF ou CNPJ do recebedor inválido.");
-              if (bankName.length < 2 || bankName.length > 100) return jsonError("Banco inválido.");
-              if (bankAgency.length < 1 || bankAgency.length > 20) return jsonError("Agência inválida.");
-              if (bankAccount.length < 1 || bankAccount.length > 30) return jsonError("Conta inválida.");
-              if (!["corrente", "poupanca", "pagamento"].includes(bankAccountType)) return jsonError("Tipo de conta inválido.");
-              if (bankAccountHolder.length < 2 || bankAccountHolder.length > 150) return jsonError("Titular da conta inválido.");
+              const recipientResult = paymentRecipientSchema.safeParse(data);
+              if (!recipientResult.success) return jsonError(recipientResult.error.issues[0]?.message ?? "Dados do recebedor inválidos.");
+              const recipient = recipientResult.data;
+              if (!isValidCpf(recipient.recipient_document) && !isValidCnpj(recipient.recipient_document)) return jsonError("CPF ou CNPJ do recebedor inválido.");
               const { data: carta } = await supabaseAdmin
                 .from("cartas")
                 .select("id,valor_bem,grupo,cota,cliente:profiles!cartas_cliente_id_fkey(consultor_user_id)")
@@ -830,13 +821,7 @@ export const Route = createFileRoute("/api/bbc")({
                   status: "pendente",
                   requested_by: userId,
                   requested_at: now,
-                  recipient_name: recipientName,
-                  recipient_document: recipientDocument,
-                  bank_name: bankName,
-                  bank_agency: bankAgency,
-                  bank_account: bankAccount,
-                  bank_account_type: bankAccountType,
-                  bank_account_holder: bankAccountHolder,
+                  ...recipient,
                 })
                 .select("*")
                 .single();
