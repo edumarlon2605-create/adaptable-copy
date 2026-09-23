@@ -294,6 +294,7 @@ export type Database = {
         Row: {
           address: string | null
           address_proof_path: string | null
+          administrator_cpf: string | null
           birth_date: string | null
           cep: string | null
           city: string | null
@@ -330,6 +331,7 @@ export type Database = {
         Insert: {
           address?: string | null
           address_proof_path?: string | null
+          administrator_cpf?: string | null
           birth_date?: string | null
           cep?: string | null
           city?: string | null
@@ -366,6 +368,7 @@ export type Database = {
         Update: {
           address?: string | null
           address_proof_path?: string | null
+          administrator_cpf?: string | null
           birth_date?: string | null
           cep?: string | null
           city?: string | null

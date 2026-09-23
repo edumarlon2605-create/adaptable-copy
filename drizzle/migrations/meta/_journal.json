@@ -15,6 +15,13 @@
       "when": 1790180309740,
       "tag": "0001_add_company_fields_to_profiles",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790181150770,
+      "tag": "0002_add_company_administrator_cpf",
+      "breakpoints": true
     }
   ]
 }
