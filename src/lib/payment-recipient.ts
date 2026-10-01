@@ -16,7 +16,7 @@ export const paymentRecipientSchema = z.object({
 });
 
 export const paymentRequestSchema = paymentRecipientSchema.extend({
-  amount: z.coerce.number({ error: "Informe o valor do pagamento." }).positive("O valor deve ser maior que zero."),
+  amount: z.coerce.number({ invalid_type_error: "Informe o valor do pagamento." }).positive("O valor deve ser maior que zero."),
 });
 
 export type PaymentRecipientInput = z.input<typeof paymentRecipientSchema>;
