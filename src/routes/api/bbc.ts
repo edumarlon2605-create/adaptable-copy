@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { paymentRecipientSchema } from "@/lib/payment-recipient";
+import { paymentRequestSchema } from "@/lib/payment-recipient";
 
 type AppRole = "admin" | "consultor" | "cliente";
 
