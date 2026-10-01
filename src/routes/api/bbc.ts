@@ -865,13 +865,37 @@ export const Route = createFileRoute("/api/bbc")({
               if (role === "consultor" && requestRow.carta?.cliente?.consultor_user_id !== userId) return jsonError("Acesso negado.", 403);
               if (requestRow.status !== "pendente") return jsonError("Esta solicitação já foi encerrada.", 409);
               const now = new Date().toISOString();
+              const confirmed = resolution === "confirmado";
+              const resolutionUpdate = confirmed
+                ? { status: resolution, resolved_by: userId, resolved_at: now, updated_at: now }
+                : {
+                    status: resolution,
+                    resolved_by: userId,
+                    resolved_at: now,
+                    updated_at: now,
+                    recipient_name: null,
+                    recipient_document: null,
+                    bank_name: null,
+                    bank_agency: null,
+                    bank_account: null,
+                    bank_account_type: null,
+                    bank_account_holder: null,
+                  };
               const { error } = await supabaseAdmin
                 .from("payment_requests")
-                .update({ status: resolution, resolved_by: userId, resolved_at: now, updated_at: now })
+                .update(resolutionUpdate)
                 .eq("id", request_id)
                 .eq("status", "pendente");
               if (error) return jsonError(error.message);
-              const confirmed = resolution === "confirmado";
+              if (!confirmed) {
+                const { error: cleanupError } = await supabaseAdmin
+                  .from("payment_history")
+                  .update({ notes: "Solicitação de pagamento total." })
+                  .eq("carta_id", requestRow.carta_id)
+                  .eq("event_type", "pagamento_total_solicitado")
+                  .eq("created_at", requestRow.requested_at);
+                if (cleanupError) return jsonError(cleanupError.message);
+              }
               const { error: historyError } = await supabaseAdmin.from("payment_history").insert({
                 carta_id: requestRow.carta_id,
                 event_type: confirmed ? "pagamento_total_confirmado" : "pagamento_total_cancelado",
