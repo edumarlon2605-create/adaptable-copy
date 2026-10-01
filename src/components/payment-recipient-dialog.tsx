@@ -17,11 +17,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { paymentRecipientSchema, type PaymentRecipientInput } from "@/lib/payment-recipient";
+import { paymentRequestSchema, type PaymentRequestData, type PaymentRequestInput } from "@/lib/payment-recipient";
 
-export type { PaymentRecipientInput } from "@/lib/payment-recipient";
+export type { PaymentRequestData } from "@/lib/payment-recipient";
 
-const EMPTY_FORM: PaymentRecipientInput = {
+const EMPTY_FORM: PaymentRequestInput = {
+  amount: "",
   recipient_name: "",
   recipient_document: "",
   bank_name: "",
@@ -34,17 +35,17 @@ const EMPTY_FORM: PaymentRecipientInput = {
 export function PaymentRecipientDialog({
   open,
   onOpenChange,
-  amount,
+  maxAmount,
   submitting,
   onSubmit,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  amount: string;
+  maxAmount: number;
   submitting: boolean;
-  onSubmit: (input: PaymentRecipientInput) => void;
+  onSubmit: (input: PaymentRequestData) => void;
 }) {
-  const [form, setForm] = useState<PaymentRecipientInput>(EMPTY_FORM);
+  const [form, setForm] = useState<PaymentRequestInput>(EMPTY_FORM);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -54,14 +55,18 @@ export function PaymentRecipientDialog({
     }
   }, [open]);
 
-  function update<K extends keyof PaymentRecipientInput>(key: K, value: PaymentRecipientInput[K]) {
+  function update<K extends keyof PaymentRequestInput>(key: K, value: PaymentRequestInput[K]) {
     setForm((current) => ({ ...current, [key]: value }));
   }
 
   function submit() {
-    const parsed = paymentRecipientSchema.safeParse(form);
+    const parsed = paymentRequestSchema.safeParse(form);
     if (!parsed.success) {
       setError(parsed.error.issues[0]?.message ?? "Confira os dados do recebedor.");
+      return;
+    }
+    if (parsed.data.amount > maxAmount) {
+      setError(`O valor não pode ultrapassar ${formatBRL(maxAmount)}.`);
       return;
     }
     setError("");
@@ -74,11 +79,19 @@ export function PaymentRecipientDialog({
         <DialogHeader>
           <DialogTitle>Dados do recebedor</DialogTitle>
           <DialogDescription>
-            Informe a conta que receberá o pagamento total de {amount}.
+            Informe o valor e a conta que receberá o pagamento. Limite: {formatBRL(maxAmount)}.
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-2">
+          <FormField label="Valor do pagamento">
+            <Input
+              value={form.amount}
+              onChange={(event) => update("amount", event.target.value)}
+              inputMode="decimal"
+              placeholder="0,00"
+            />
+          </FormField>
           <div className="grid gap-4 sm:grid-cols-2">
             <FormField label="Nome ou razão social">
               <Input
@@ -111,7 +124,7 @@ export function PaymentRecipientDialog({
             <FormField label="Tipo de conta">
               <Select
                 value={form.bank_account_type}
-                onValueChange={(value: PaymentRecipientInput["bank_account_type"]) => update("bank_account_type", value)}
+                onValueChange={(value: PaymentRequestInput["bank_account_type"]) => update("bank_account_type", value)}
               >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -160,6 +173,10 @@ export function PaymentRecipientDialog({
       </DialogContent>
     </Dialog>
   );
+}
+
+function formatBRL(value: number) {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 }
 
 function FormField({ label, children }: { label: string; children: React.ReactNode }) {

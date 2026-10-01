@@ -15,5 +15,11 @@ export const paymentRecipientSchema = z.object({
   bank_account_holder: z.string().trim().min(2, "Informe o titular da conta.").max(150),
 });
 
+export const paymentRequestSchema = paymentRecipientSchema.extend({
+  amount: z.coerce.number({ invalid_type_error: "Informe o valor do pagamento." }).positive("O valor deve ser maior que zero."),
+});
+
 export type PaymentRecipientInput = z.input<typeof paymentRecipientSchema>;
 export type PaymentRecipientData = z.output<typeof paymentRecipientSchema>;
+export type PaymentRequestInput = PaymentRecipientInput & { amount: string };
+export type PaymentRequestData = z.output<typeof paymentRequestSchema>;
