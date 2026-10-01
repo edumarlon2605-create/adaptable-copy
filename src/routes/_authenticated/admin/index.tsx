@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { requestTotalPayment } from "@/lib/cartas.functions";
 import { toast } from "sonner";
 import { mapError } from "@/lib/error-messages";
-import { PaymentRecipientDialog, type PaymentRecipientInput } from "@/components/payment-recipient-dialog";
+import { PaymentRecipientDialog, type PaymentRequestData } from "@/components/payment-recipient-dialog";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
@@ -48,14 +48,14 @@ function DashboardPage() {
     cartas: [] as any[],
   };
   const requestPayment = useMutation({
-    mutationFn: (input: PaymentRecipientInput) => {
+    mutationFn: (input: PaymentRequestData) => {
       if (!selectedCarta?.id) throw new Error("Carta não informada.");
       return requestTotalPayment({ data: { carta_id: selectedCarta.id, ...input } });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin", "dashboard"] });
       setSelectedCarta(null);
-      toast.success("Solicitação de pagamento total enviada.");
+      toast.success("Solicitação de pagamento enviada.");
     },
     onError: (error) => toast.error(mapError(error)),
   });
@@ -79,7 +79,7 @@ function DashboardPage() {
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-6">
-          <h2 className="font-semibold text-lg mb-4">Solicitar pagamento total</h2>
+          <h2 className="font-semibold text-lg mb-4">Solicitar pagamento</h2>
           {isLoading ? (
             <p className="text-sm text-muted-foreground">Carregando…</p>
           ) : stats.cartas.length === 0 ? (
@@ -100,7 +100,7 @@ function DashboardPage() {
                     disabled={Boolean(carta.pending_request) || requestPayment.isPending}
                     onClick={() => setSelectedCarta(carta)}
                   >
-                    {carta.pending_request ? "Pagamento solicitado" : "Solicitar pagamento total"}
+                    {carta.pending_request ? "Pagamento solicitado" : "Solicitar pagamento"}
                   </Button>
                 </div>
               ))}
@@ -111,7 +111,7 @@ function DashboardPage() {
         <PaymentRecipientDialog
           open={Boolean(selectedCarta)}
           onOpenChange={(open) => !open && setSelectedCarta(null)}
-          amount={new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(selectedCarta?.valor_bem ?? 0))}
+          maxAmount={Number(selectedCarta?.valor_bem ?? 0)}
           submitting={requestPayment.isPending}
           onSubmit={(input) => requestPayment.mutate(input)}
         />

@@ -35,7 +35,7 @@ import {
 } from "@/lib/cartas.functions";
 import { listClients } from "@/lib/admin.functions";
 import { mapError } from "@/lib/error-messages";
-import { PaymentRecipientDialog, type PaymentRecipientInput } from "@/components/payment-recipient-dialog";
+import { PaymentRecipientDialog, type PaymentRequestData } from "@/components/payment-recipient-dialog";
 
 export const Route = createFileRoute("/_authenticated/admin/cartas")({
   head: () => ({
@@ -590,14 +590,14 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
   });
 
   const requestPayment = useMutation({
-    mutationFn: (input: PaymentRecipientInput) => {
+    mutationFn: (input: PaymentRequestData) => {
       if (!cartaId) throw new Error("Carta não informada.");
       return requestTotalPayment({ data: { carta_id: cartaId, ...input } });
     },
     onSuccess: () => {
       invalidateAll();
       setRecipientOpen(false);
-      toast.success("Solicitação de pagamento total enviada.");
+      toast.success("Solicitação de pagamento enviada.");
     },
     onError: (e) => toast.error(mapError(e)),
   });
@@ -643,11 +643,11 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
             <TabsContent value="dashboard" className="mt-4 space-y-4">
               <div className="flex flex-col gap-3 rounded-xl border border-border bg-muted/30 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <div className="text-sm font-semibold">Pagamento total</div>
+                  <div className="text-sm font-semibold">Pagamento</div>
                   <div className="text-xs text-muted-foreground">
                     {pendingRequest
                       ? `${fmtBRL(Number(pendingRequest.amount))} solicitado em ${fmtDT(pendingRequest.requested_at)}`
-                      : `Solicitar o Valor do Bem: ${fmtBRL(carta.valor_bem)}`}
+                      : `Informe um valor de até ${fmtBRL(carta.valor_bem)}`}
                   </div>
                   {latestPaymentRequest?.recipient_name && (
                     <div className="mt-3 grid gap-1 text-xs sm:grid-cols-2">
@@ -668,14 +668,14 @@ function CartaDetalheDialog({ cartaId, onClose }: { cartaId: string | null; onCl
                   </div>
                 ) : (
                   <Button className="gap-2" disabled={requestPayment.isPending} onClick={() => setRecipientOpen(true)}>
-                    <Send className="h-4 w-4" /> Solicitar pagamento total
+                    <Send className="h-4 w-4" /> Solicitar pagamento
                   </Button>
                 )}
               </div>
               <PaymentRecipientDialog
                 open={recipientOpen}
                 onOpenChange={setRecipientOpen}
-                amount={fmtBRL(carta.valor_bem)}
+                maxAmount={Number(carta.valor_bem)}
                 submitting={requestPayment.isPending}
                 onSubmit={(input) => requestPayment.mutate(input)}
               />
@@ -817,9 +817,9 @@ function eventLabel(t: string) {
     case "carta_atualizada": return "Carta atualizada / cronograma reprocessado";
     case "pagamento_registrado": return "Pagamento registrado";
     case "pagamento_estornado": return "Pagamento estornado";
-    case "pagamento_total_solicitado": return "Pagamento total solicitado";
-    case "pagamento_total_confirmado": return "Pagamento total confirmado";
-    case "pagamento_total_cancelado": return "Solicitação de pagamento total cancelada";
+    case "pagamento_total_solicitado": return "Pagamento solicitado";
+    case "pagamento_total_confirmado": return "Pagamento confirmado";
+    case "pagamento_total_cancelado": return "Solicitação de pagamento cancelada";
     default: return t;
   }
 }

@@ -404,7 +404,7 @@ function ClienteHome() {
                                     : request.status === "cancelado" ? "Cancelado" : "Solicitado";
                                   return (
                                     <tr key={`request-${entry.id}`} className="bg-[#fff8d6]/60">
-                                      <td className="py-2 px-2 font-semibold whitespace-nowrap">Pagamento total</td>
+                                      <td className="py-2 px-2 font-semibold whitespace-nowrap">Pagamento</td>
                                       <td className="py-2 px-2">{new Date(request.requested_at).toLocaleDateString("pt-BR")}</td>
                                       <td className="py-2 px-2 text-right font-semibold">{fmtBRL(request.amount)}</td>
                                       <td className="py-2 px-2 text-center">

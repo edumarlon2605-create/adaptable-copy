@@ -793,6 +793,8 @@ export const Route = createFileRoute("/api/bbc")({
               requireRole("admin", "consultor");
               const carta_id = String(data.carta_id ?? "");
               if (!carta_id) return jsonError("Carta não informada.");
+              const requestedAmount = Number(data.amount);
+              if (!Number.isFinite(requestedAmount) || requestedAmount <= 0) return jsonError("Informe um valor de pagamento válido.");
               const recipientResult = paymentRecipientSchema.safeParse(data);
               if (!recipientResult.success) return jsonError(recipientResult.error.issues[0]?.message ?? "Dados do recebedor inválidos.");
               const recipient = recipientResult.data;
@@ -805,6 +807,7 @@ export const Route = createFileRoute("/api/bbc")({
               if (!carta) return jsonError("Carta não encontrada.", 404);
               if (role === "consultor" && carta.cliente?.consultor_user_id !== userId) return jsonError("Acesso negado.", 403);
               if (!carta.valor_bem || Number(carta.valor_bem) <= 0) return jsonError("A carta não possui Valor do Bem válido.");
+              if (requestedAmount > Number(carta.valor_bem)) return jsonError("O valor solicitado não pode ultrapassar o Valor do Bem.");
               const { data: pending } = await supabaseAdmin
                 .from("payment_requests")
                 .select("id")
@@ -817,7 +820,7 @@ export const Route = createFileRoute("/api/bbc")({
                 .from("payment_requests")
                 .insert({
                   carta_id,
-                  amount: carta.valor_bem,
+                  amount: requestedAmount,
                   status: "pendente",
                   requested_by: userId,
                   requested_at: now,
@@ -832,11 +835,11 @@ export const Route = createFileRoute("/api/bbc")({
               const { error: historyError } = await supabaseAdmin.from("payment_history").insert({
                 carta_id,
                 event_type: "pagamento_total_solicitado",
-                amount: carta.valor_bem,
+                amount: requestedAmount,
                 status: "pendente",
                 payment_date: now,
                  notes: [
-                   "Pagamento total solicitado pelo Valor do Bem.",
+                   "Pagamento solicitado.",
                    `Recebedor: ${recipient.recipient_name}`,
                    `CPF/CNPJ: ${recipient.recipient_document}`,
                    `Banco: ${recipient.bank_name}`,
@@ -890,7 +893,7 @@ export const Route = createFileRoute("/api/bbc")({
               if (!confirmed) {
                 const { error: cleanupError } = await supabaseAdmin
                   .from("payment_history")
-                  .update({ notes: "Solicitação de pagamento total." })
+                  .update({ notes: "Solicitação de pagamento." })
                   .eq("carta_id", requestRow.carta_id)
                   .eq("event_type", "pagamento_total_solicitado")
                   .eq("created_at", requestRow.requested_at);
@@ -902,7 +905,7 @@ export const Route = createFileRoute("/api/bbc")({
                 amount: requestRow.amount,
                 status: resolution,
                 payment_date: now,
-                notes: confirmed ? "Pagamento total confirmado." : "Solicitação de pagamento total cancelada.",
+                notes: confirmed ? "Pagamento confirmado." : "Solicitação de pagamento cancelada.",
                 created_by: userId,
                 created_at: now,
               });
