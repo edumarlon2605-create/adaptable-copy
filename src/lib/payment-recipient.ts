@@ -16,8 +16,27 @@ export const paymentRecipientSchema = z.object({
 });
 
 export const paymentRequestSchema = paymentRecipientSchema.extend({
-  amount: z.coerce.number({ invalid_type_error: "Informe o valor do pagamento." }).positive("O valor deve ser maior que zero."),
+  amount: z.preprocess(
+    (value) => {
+      if (typeof value === "number") return value;
+      if (typeof value !== "string") return value;
+      const normalized = value.trim().replace(/\./g, "").replace(",", ".");
+      return normalized === "" ? Number.NaN : Number(normalized);
+    },
+    z.number({ invalid_type_error: "Informe o valor do pagamento." })
+      .finite("Informe um valor de pagamento válido.")
+      .positive("O valor deve ser maior que zero."),
+  ),
 });
+
+export function formatPaymentAmountInput(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 15);
+  if (!digits) return "";
+  return (Number(digits) / 100).toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
 
 export type PaymentRecipientInput = z.input<typeof paymentRecipientSchema>;
 export type PaymentRecipientData = z.output<typeof paymentRecipientSchema>;

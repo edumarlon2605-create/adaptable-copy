@@ -17,7 +17,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { paymentRequestSchema, type PaymentRequestData, type PaymentRequestInput } from "@/lib/payment-recipient";
+import {
+  formatPaymentAmountInput,
+  paymentRequestSchema,
+  type PaymentRequestData,
+  type PaymentRequestInput,
+} from "@/lib/payment-recipient";
 
 export type { PaymentRequestData } from "@/lib/payment-recipient";
 
@@ -87,9 +92,10 @@ export function PaymentRecipientDialog({
           <FormField label="Valor do pagamento">
             <Input
               value={form.amount}
-              onChange={(event) => update("amount", event.target.value)}
+              onChange={(event) => update("amount", formatPaymentAmountInput(event.target.value))}
               inputMode="decimal"
               placeholder="0,00"
+              aria-label="Valor do pagamento em reais"
             />
           </FormField>
           <div className="grid gap-4 sm:grid-cols-2">
