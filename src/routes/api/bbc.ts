@@ -793,11 +793,9 @@ export const Route = createFileRoute("/api/bbc")({
               requireRole("admin", "consultor");
               const carta_id = String(data.carta_id ?? "");
               if (!carta_id) return jsonError("Carta não informada.");
-              const requestedAmount = Number(data.amount);
-              if (!Number.isFinite(requestedAmount) || requestedAmount <= 0) return jsonError("Informe um valor de pagamento válido.");
-              const recipientResult = paymentRecipientSchema.safeParse(data);
-              if (!recipientResult.success) return jsonError(recipientResult.error.issues[0]?.message ?? "Dados do recebedor inválidos.");
-              const recipient = recipientResult.data;
+              const requestResult = paymentRequestSchema.safeParse(data);
+              if (!requestResult.success) return jsonError(requestResult.error.issues[0]?.message ?? "Dados da solicitação inválidos.");
+              const { amount: requestedAmount, ...recipient } = requestResult.data;
               if (!isValidCpf(recipient.recipient_document) && !isValidCnpj(recipient.recipient_document)) return jsonError("CPF ou CNPJ do recebedor inválido.");
               const { data: carta } = await supabaseAdmin
                 .from("cartas")
